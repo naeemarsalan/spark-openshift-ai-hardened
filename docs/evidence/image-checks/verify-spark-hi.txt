@@ -1,0 +1,18 @@
+== oci.arsalan.io/spark/spark-hi:4.3.0-3
+  PASS USER is numeric and non-root (1001:0)
+  PASS primary group is 0 (arbitrary-UID friendly)
+  PASS no credential-looking ENV vars
+  PASS build history: no inline secrets, no curl/wget/git downloads
+  PASS no privileged ports exposed
+  PASS no setuid/setgid binaries
+  PASS no world-writable files or non-sticky world-writable dirs
+  PASS /etc/passwd and /etc/group are not writable by the runtime user
+  PASS Spark distribution and Python packages are read-only for the runtime user
+  PASS work-dir is writable through group 0 only
+  PASS no private keys, keystores or credential files
+  PASS no PEM private-key blocks in config, script or Python files
+  PASS no package manager, compiler or download tool in the runtime image (UBI flavour keeps microdnf/rpm/curl from the base)
+  PASS no pip / setuptools importable
+  PASS no leftover build caches
+  PASS starts as arbitrary UID, no capabilities, no-new-privileges, read-only rootfs
+== 16 passed, 0 failed

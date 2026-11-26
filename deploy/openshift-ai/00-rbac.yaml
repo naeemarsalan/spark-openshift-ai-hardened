@@ -1,0 +1,28 @@
+# Driver identity for Spark jobs in YOUR namespace. OpenShift AI ships these objects only in
+# redhat-ods-applications; every namespace that runs Spark needs its own copy. Names match
+# Red Hat's (config/spark-rbac in red-hat-data-services/spark-operator).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spark-operator-spark
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: spark-role
+rules:
+  - apiGroups: [""]
+    resources: [pods, configmaps, persistentvolumeclaims, services]
+    verbs: [get, list, watch, create, update, patch, delete, deletecollection]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: spark-role-binding
+subjects:
+  - kind: ServiceAccount
+    name: spark-operator-spark
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: spark-role

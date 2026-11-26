@@ -1,0 +1,56 @@
+# Test cluster, captured 2026-11-25T20:25Z
+
+## Versions
+OpenShift 4.20.27
+Red Hat OpenShift AI 3.5.4 (channel stable-3.5)
+platform 3.5.4
+Spark Operator v2.4.0
+Spark 4.0.1
+Spark operator image: registry.redhat.io/rhoai/odh-spark-operator-rhel9@sha256:47a7872b2fc796beebac631f2f0797329bddb0cacac7df9dd185a8a636487d3e
+
+## Nodes
+TYPE          KUBELET    RUNTIME                                      OS
+m6i.2xlarge   v1.33.12   cri-o://1.33.12-3.rhaos4.20.git64c6a00.el9   Red Hat Enterprise Linux CoreOS 9.6.20260623-0 (Plow)
+m6i.xlarge    v1.33.12   cri-o://1.33.12-3.rhaos4.20.git64c6a00.el9   Red Hat Enterprise Linux CoreOS 9.6.20260623-0 (Plow)
+m6i.xlarge    v1.33.12   cri-o://1.33.12-3.rhaos4.20.git64c6a00.el9   Red Hat Enterprise Linux CoreOS 9.6.20260623-0 (Plow)
+m6i.2xlarge   v1.33.12   cri-o://1.33.12-3.rhaos4.20.git64c6a00.el9   Red Hat Enterprise Linux CoreOS 9.6.20260623-0 (Plow)
+m6i.xlarge    v1.33.12   cri-o://1.33.12-3.rhaos4.20.git64c6a00.el9   Red Hat Enterprise Linux CoreOS 9.6.20260623-0 (Plow)
+m6i.2xlarge   v1.33.12   cri-o://1.33.12-3.rhaos4.20.git64c6a00.el9   Red Hat Enterprise Linux CoreOS 9.6.20260623-0 (Plow)
+
+## Test namespace
+uid-range: 1000770000/10000
+supplemental-groups: 1000770000/10000
+SCC grants to service accounts in spark-demo (expect none):
+  count: 0
+
+## Spark pods: SCC, UID, security context
+example-connect-client     restricted-v2 uid=1000770000 nonRoot=None privEsc=False caps.drop=ALL seccomp=RuntimeDefault spark-examples:4.3.0-3
+example-etl-driver         restricted-v2 uid=1000770000 nonRoot=True privEsc=False caps.drop=ALL seccomp=RuntimeDefault spark-examples:4.3.0-3
+example-report-driver      restricted-v2 uid=1000770000 nonRoot=True privEsc=False caps.drop=ALL seccomp=RuntimeDefault spark-examples:4.3.0-3
+oai-connect-client         restricted-v2 uid=1000770000 nonRoot=None privEsc=False caps.drop=ALL seccomp=RuntimeDefault spark-ubi9:4.3.0-3
+s3-jdbc-python-driver      restricted-v2 uid=1000770000 nonRoot=True privEsc=False caps.drop=ALL seccomp=RuntimeDefault spark-ubi9:4.3.0-3
+spark-connect-exec-3       restricted-v2 uid=1000770000 nonRoot=True privEsc=False caps.drop=ALL seccomp=RuntimeDefault spark-ubi9:4.3.0-3
+spark-connect-exec-4       restricted-v2 uid=1000770000 nonRoot=True privEsc=False caps.drop=ALL seccomp=RuntimeDefault spark-ubi9:4.3.0-3
+spark-connect-server       restricted-v2 uid=1000770000 nonRoot=True privEsc=False caps.drop=ALL seccomp=RuntimeDefault spark-ubi9:4.3.0-3
+spark-pi-scala-driver      restricted-v2 uid=1000770000 nonRoot=True privEsc=False caps.drop=ALL seccomp=RuntimeDefault spark-ubi9:4.3.0-3
+
+## Inside a running Spark pod
+uid=1000770000(1000770000) gid=0(root) groups=0(root),1000770000
+HOME=/opt/spark/work-dir
+touch: cannot touch '/opt/spark/jars/x': Permission denied
+work-dir writable
+CapPrm:	0000000000000000
+CapEff:	0000000000000000
+CapBnd:	0000000000000000
+NoNewPrivs:	1
+Seccomp:	2
+
+## Workbench pod
+scc=restricted-v2 uid=1000800000 label opendatahub.io/workbenches=true
+image=registry.redhat.io/rhoai/odh-workbench-jupyter-minimal-cpu-py312-rhel9@sha256:97d0a46b51902ce49fbe39ad0d76a7a56f34622c1379037d2546892611319421
+
+## Spark operator webhook scope
+mutate-pod.sparkoperator.k8s.io  namespaceSelector={"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"In","values":["default"]}]}
+mutate-sparkapplication.sparkoperator.k8s.io  namespaceSelector={"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"In","values":["default"]}]}
+mutate-scheduledsparkapplication.sparkoperator.k8s.io  namespaceSelector={"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"In","values":["default"]}]}
+mutate-sparkconnect.sparkoperator.k8s.io  namespaceSelector={"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"In","values":["default"]}]}

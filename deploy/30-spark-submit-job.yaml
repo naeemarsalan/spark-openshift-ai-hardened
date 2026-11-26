@@ -1,0 +1,94 @@
+# spark-submit in cluster mode. This Job is only the *submitter*; Spark creates a driver pod,
+# which creates executor pods. All three use the same image and run under restricted-v2.
+#
+# Data-source settings and credentials are injected into the driver/executor pods from the
+# `spark-datasources` Secret (spark.kubernetes.*.secretKeyRef.*) - never passed as arguments.
+#
+# Substituted by tests/cluster-test.sh: SPARK_IMAGE_PLACEHOLDER, JOB_NAME_PLACEHOLDER and the
+# trailing application arguments (APP_ARGS_PLACEHOLDER).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: JOB_NAME_PLACEHOLDER
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: spark
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: submit
+          image: SPARK_IMAGE_PLACEHOLDER
+          args:
+            - spark-submit
+            - --master
+            - k8s://https://kubernetes.default.svc
+            - --deploy-mode
+            - cluster
+            - --name
+            - JOB_NAME_PLACEHOLDER
+            - --conf
+            - spark.kubernetes.namespace=$(POD_NAMESPACE)
+            - --conf
+            - spark.kubernetes.container.image=SPARK_IMAGE_PLACEHOLDER
+            - --conf
+            - spark.kubernetes.authenticate.driver.serviceAccountName=spark
+            - --conf
+            - spark.kubernetes.driver.podTemplateFile=/etc/spark/pod-templates/driver.yaml
+            - --conf
+            - spark.kubernetes.executor.podTemplateFile=/etc/spark/pod-templates/executor.yaml
+            - --conf
+            - spark.kubernetes.driver.label.spark-job=JOB_NAME_PLACEHOLDER
+            # Spark 4.3 creates a NetworkPolicy per application at submit time. That needs
+            # networkpolicies write access for this ServiceAccount, which would also let a job
+            # rewrite the namespace's other policies. Keep policies admin-owned instead.
+            - --conf
+            - spark.kubernetes.driver.pod.excludedFeatureSteps=org.apache.spark.deploy.k8s.features.NetworkPolicyFeatureStep
+            - --conf
+            - spark.kubernetes.driver.secretKeyRef.S3_ENDPOINT=spark-datasources:S3_ENDPOINT
+            - --conf
+            - spark.kubernetes.driver.secretKeyRef.S3_BUCKET=spark-datasources:S3_BUCKET
+            - --conf
+            - spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID=spark-datasources:AWS_ACCESS_KEY_ID
+            - --conf
+            - spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY=spark-datasources:AWS_SECRET_ACCESS_KEY
+            - --conf
+            - spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID=spark-datasources:AWS_ACCESS_KEY_ID
+            - --conf
+            - spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY=spark-datasources:AWS_SECRET_ACCESS_KEY
+            - --conf
+            - spark.kubernetes.driver.secretKeyRef.JDBC_URL=spark-datasources:JDBC_URL
+            - --conf
+            - spark.kubernetes.driver.secretKeyRef.JDBC_USER=spark-datasources:JDBC_USER
+            - --conf
+            - spark.kubernetes.driver.secretKeyRef.JDBC_PASSWORD=spark-datasources:JDBC_PASSWORD
+            - --conf
+            - spark.executor.instances=2
+            - --conf
+            - spark.executor.memory=1g
+            - --conf
+            - spark.kubernetes.executor.request.cores=500m
+            - --conf
+            - spark.kubernetes.submission.waitAppCompletion=true
+            - APP_ARGS_PLACEHOLDER
+          env:
+            - { name: POD_NAMESPACE, valueFrom: { fieldRef: { fieldPath: metadata.namespace } } }
+          resources:
+            requests: { cpu: 250m, memory: 768Mi }
+            limits: { memory: 1Gi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: work, mountPath: /opt/spark/work-dir }
+            - { name: pod-templates, mountPath: /etc/spark/pod-templates, readOnly: true }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+        - { name: work, emptyDir: {} }
+        - { name: pod-templates, configMap: { name: spark-pod-templates } }

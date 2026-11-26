@@ -1,0 +1,7 @@
+# Vendored binaries are fetched by hack/fetch-artifacts.sh and pinned by artifacts.sha256
+/artifacts/
+/reports/
+*.tar
+.env
+/.kind/
+/.claude/

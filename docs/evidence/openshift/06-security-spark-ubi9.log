@@ -1,0 +1,14 @@
+== NetworkPolicy around Spark Connect (spark-connect-service.spark-demo.svc.cluster.local:15002)
+  PASS same namespace can reach Spark Connect
+  PASS workbench pod in a data-science-project namespace can reach it
+  PASS non-workbench pod in that namespace is blocked
+  PASS pod in an unrelated namespace is blocked
+== RBAC of the Spark driver ServiceAccount
+  PASS can create executor pods in its own namespace
+  PASS cannot read Secrets
+  PASS cannot create pods in another namespace
+  PASS no cluster-level permissions
+== credential values never leave the Secret
+  PASS not in any pod spec, ConfigMap, SparkApplication or SparkConnect (7158 lines of YAML checked)
+  PASS not in any Spark pod log (2208 lines checked)
+== 10 passed, 0 failed

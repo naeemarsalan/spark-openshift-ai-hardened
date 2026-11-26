@@ -1,0 +1,8 @@
+# Throwaway local Kubernetes for rehearsing manifests and the Spark operator.
+# NOT OpenShift: no SCCs, so this cannot prove restricted-v2. It enforces the upstream
+# "restricted" Pod Security Standard on the test namespace instead, which is the closest analogue.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+# Single node: this box hits the default fs.inotify.max_user_instances limit with a second kind node.
+nodes:
+  - role: control-plane

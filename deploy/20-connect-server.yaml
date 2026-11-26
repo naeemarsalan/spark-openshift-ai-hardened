@@ -1,0 +1,122 @@
+# Spark Connect server: a long-running driver (client mode) that launches executor pods.
+# Clients (OpenShift AI workbenches, pipelines) connect with  sc://spark-connect:15002
+#
+# SPARK_IMAGE_PLACEHOLDER is substituted by tests/cluster-test.sh (or `sed`) at apply time.
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-connect
+spec:
+  clusterIP: None          # headless: executors must reach the driver pod directly
+  selector:
+    app: spark-connect
+  ports:
+    - { name: grpc, port: 15002 }
+    - { name: driver-rpc, port: 7078 }
+    - { name: blockmanager, port: 7079 }
+    - { name: ui, port: 4040 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-connect
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector:
+    matchLabels: { app: spark-connect }
+  template:
+    metadata:
+      labels: { app: spark-connect }
+    spec:
+      serviceAccountName: spark
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: spark-connect
+          image: SPARK_IMAGE_PLACEHOLDER
+          args:
+            - connect
+            - --master
+            - k8s://https://kubernetes.default.svc
+            - --conf
+            - spark.kubernetes.namespace=$(POD_NAMESPACE)
+            - --conf
+            - spark.kubernetes.container.image=SPARK_IMAGE_PLACEHOLDER
+            - --conf
+            - spark.kubernetes.driver.pod.name=$(POD_NAME)   # executors are owned by (and GC'd with) this pod
+            - --conf
+            - spark.kubernetes.executor.podTemplateFile=/etc/spark/pod-templates/executor.yaml
+            - --conf
+            - spark.kubernetes.executor.podNamePrefix=spark-connect
+            - --conf
+            - spark.driver.host=$(POD_IP)
+            - --conf
+            - spark.driver.bindAddress=$(POD_IP)   # not 0.0.0.0: Spark 4.3 executors dial this address
+            - --conf
+            - spark.driver.port=7078
+            - --conf
+            - spark.driver.blockManager.port=7079
+            - --conf
+            - spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID=spark-datasources:AWS_ACCESS_KEY_ID
+            - --conf
+            - spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY=spark-datasources:AWS_SECRET_ACCESS_KEY
+            - --conf
+            - spark.hadoop.fs.s3a.endpoint=$(S3_ENDPOINT)
+            - --conf
+            - spark.hadoop.fs.s3a.path.style.access=true
+            - --conf
+            - spark.hadoop.fs.s3a.endpoint.region=us-east-1
+            - --conf
+            - spark.executor.instances=2
+            - --conf
+            - spark.executor.cores=1
+            - --conf
+            - spark.executor.memory=1g
+            - --conf
+            - spark.kubernetes.executor.request.cores=500m
+          env:
+            - { name: POD_NAME, valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+            - { name: POD_NAMESPACE, valueFrom: { fieldRef: { fieldPath: metadata.namespace } } }
+            - { name: POD_IP, valueFrom: { fieldRef: { fieldPath: status.podIP } } }
+            # Data-source settings and credentials come from a Secret - never from the image.
+            - { name: S3_ENDPOINT, valueFrom: { secretKeyRef: { name: spark-datasources, key: S3_ENDPOINT } } }
+            - { name: AWS_ACCESS_KEY_ID, valueFrom: { secretKeyRef: { name: spark-datasources, key: AWS_ACCESS_KEY_ID } } }
+            - { name: AWS_SECRET_ACCESS_KEY, valueFrom: { secretKeyRef: { name: spark-datasources, key: AWS_SECRET_ACCESS_KEY } } }
+          ports:
+            - { name: grpc, containerPort: 15002 }
+            - { name: ui, containerPort: 4040 }
+          readinessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 500m, memory: 1500Mi }
+            limits: { memory: 2Gi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: work, mountPath: /opt/spark/work-dir }
+            - { name: pod-templates, mountPath: /etc/spark/pod-templates, readOnly: true }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+        - { name: work, emptyDir: {} }
+        - { name: pod-templates, configMap: { name: spark-pod-templates } }
+---
+# Spark Connect has no authentication unless spark.connect.authenticate.token is set (and
+# token auth needs TLS in front). Until that is in place, restrict who can reach the port.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: spark-connect
+spec:
+  podSelector:
+    matchLabels: { app: spark-connect }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}        # same namespace only (clients + this server's executors)

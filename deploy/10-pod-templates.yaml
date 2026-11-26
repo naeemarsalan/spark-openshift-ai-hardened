@@ -1,0 +1,59 @@
+# Pod templates Spark applies to the driver / executor pods it creates.
+#
+# What restricted-v2 needs and where it comes from:
+#   runAsNonRoot, drop ALL caps, no privilege escalation, RuntimeDefault seccomp  -> set here explicitly
+#   runAsUser / fsGroup / SELinux MCS level                                        -> NOT set: the SCC
+#       injects values from the namespace's allocated range. Hard-coding a UID is the most
+#       common reason a Spark pod is rejected by restricted-v2.
+# readOnlyRootFilesystem is stricter than the SCC requires; /tmp and work-dir are emptyDirs.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-pod-templates
+data:
+  driver.yaml: |
+    apiVersion: v1
+    kind: Pod
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: spark-kubernetes-driver
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: work, mountPath: /opt/spark/work-dir }
+            - { name: jobs, mountPath: /jobs, readOnly: true }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+        - { name: work, emptyDir: {} }
+        # Application code for the examples. Real jobs would bake code into a derived image
+        # or load it from S3 (spark-submit s3a://bucket/job.py).
+        - { name: jobs, configMap: { name: spark-test-jobs, optional: true } }
+  executor.yaml: |
+    apiVersion: v1
+    kind: Pod
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: spark-kubernetes-executor
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: work, mountPath: /opt/spark/work-dir }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+        - { name: work, emptyDir: {} }

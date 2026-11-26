@@ -1,0 +1,22 @@
+# Application image: the hardened Spark base + your own code. This is the pattern for
+# shipping jobs - the base image stays generic, each application adds a thin layer.
+#
+# The Scala job is compiled with the Scala compiler that already ships inside the Spark
+# distribution, so no sbt/Maven and no internet access are needed. A real project would
+# build its jar in CI and COPY it in the same way.
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE} AS build
+USER 0
+COPY 02-scala-report/src /src
+RUN mkdir -p /out/classes && \
+    java -cp "/opt/spark/jars/*" scala.tools.nsc.Main -nowarn \
+         -classpath "$(echo /opt/spark/jars/*.jar | tr ' ' ':')" -d /out/classes \
+         $(find /src -name '*.scala') && \
+    cd /out/classes && \
+    python3.12 -c "import zipfile, pathlib; z = zipfile.ZipFile('/out/category-report.jar', 'w', zipfile.ZIP_DEFLATED); [z.write(p, p.as_posix()) for p in sorted(pathlib.Path('.').rglob('*')) if p.is_file()]; z.close()"
+
+FROM ${BASE_IMAGE}
+# Root-owned and world-readable, like the rest of the image: the runtime UID cannot modify it.
+COPY --from=build --chown=0:0 --chmod=0644 /out/category-report.jar /opt/spark/app/category-report.jar
+COPY --chown=0:0 --chmod=0644 01-pyspark-etl/etl.py 03-spark-connect/client.py /opt/spark/app/
+USER 1001:0

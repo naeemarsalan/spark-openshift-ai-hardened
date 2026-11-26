@@ -1,0 +1,62 @@
+# TEST ONLY: throw-away S3 endpoint (SeaweedFS) and PostgreSQL for the S3A + JDBC round-trip.
+# Their credentials live in the `spark-test-deps` Secret, generated with random values by
+# tests/cluster-test.sh - nothing sensitive is stored in git.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-s3
+spec:
+  selector: { matchLabels: { app: test-s3 } }
+  template:
+    metadata: { labels: { app: test-s3 } }
+    spec:
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: seaweedfs
+          image: docker.io/chrislusf/seaweedfs:latest
+          args: ["server", "-dir=/data", "-s3", "-s3.port=8333", "-s3.config=/etc/seaweedfs/s3.json"]
+          ports: [{ containerPort: 8333 }]
+          securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: ["ALL"] } }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+            - { name: cfg, mountPath: /etc/seaweedfs, readOnly: true }
+      volumes:
+        - { name: data, emptyDir: {} }
+        - { name: cfg, secret: { secretName: spark-test-deps, items: [{ key: s3.json, path: s3.json }] } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: test-s3 }
+spec:
+  selector: { app: test-s3 }
+  ports: [{ port: 8333 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-postgres
+spec:
+  selector: { matchLabels: { app: test-postgres } }
+  template:
+    metadata: { labels: { app: test-postgres } }
+    spec:
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: postgres
+          image: quay.io/sclorg/postgresql-16-c9s:latest
+          env:
+            - { name: POSTGRESQL_USER, value: spark }
+            - { name: POSTGRESQL_DATABASE, value: sparkdb }
+            - { name: POSTGRESQL_PASSWORD, valueFrom: { secretKeyRef: { name: spark-test-deps, key: pg-password } } }
+          ports: [{ containerPort: 5432 }]
+          readinessProbe: { exec: { command: ["pg_isready", "-h", "127.0.0.1"] }, periodSeconds: 5 }
+          securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: ["ALL"] } }
+          volumeMounts: [{ name: data, mountPath: /var/lib/pgsql/data }]
+      volumes: [{ name: data, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: test-postgres }
+spec:
+  selector: { app: test-postgres }
+  ports: [{ port: 5432 }]

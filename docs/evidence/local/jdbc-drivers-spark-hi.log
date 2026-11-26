@@ -1,0 +1,5 @@
+== JDBC drivers in oci.arsalan.io/spark/spark-hi:4.3.0-3 (uid 29519:0)
+  PASS postgres   JDBC_ROUNDTRIP_OK rows=1000 sum=624375.00 db=PostgreSQL 16.15 on x86_64-redhat-linux-gnu, compiled by gcc (GCC) 11.
+  PASS mssql      JDBC_ROUNDTRIP_OK rows=1000 sum=624375.00 db=Microsoft SQL Server 2022 (RTM-CU28) (KB5125472) - 16.0.4325.4 (X64) 
+  PASS oracle     JDBC_ROUNDTRIP_OK rows=1000 sum=624375.00 db=Oracle AI Database 26ai Free Release 23.26.4.0.0 - Develop, Learn, and
+== 3 passed, 0 failed

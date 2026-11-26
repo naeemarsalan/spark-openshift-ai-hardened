@@ -1,0 +1,55 @@
+client pyspark 4.2.0 pandas 3.1.1
+nbconvert exit 0
+--- cell 1: import os
+Connected. Server Spark version: 4.3.0
+
+--- cell 3: # Executors read the curated zone straight from S3; only the result co
+root
+ |-- txn_id: long (nullable = true)
+ |-- account_id: long (nullable = true)
+ |-- amount: double (nullable = true)
+ |-- ts: timestamp (nullable = true)
+ |-- risk: double (nullable = true)
+ |-- dt: string (nullable = true)
+ |-- category: string (nullable = true)
+
++---------+-----+----------+
+| category| txns|avg_amount|
++---------+-----+----------+
+|   dining|32989|    251.79|
+|     fuel|32990|    249.82|
+|  grocery|32337|    249.47|
+|   online|32336|    250.47|
+|   travel|32337|    250.61|
+|utilities|32990|    251.84|
++---------+-----+----------+
+
+
+--- cell 4: # A pandas UDF defined here, executed on the cluster's Python workers 
+     band   count
+0  medium   58876
+1   small   19320
+2   large  117783
+--- cell 5: # Spark SQL
+    category  account_id    spend
+0  utilities        4831  5319.79
+1     dining        3965  5312.65
+2  utilities        3347  5270.99
+3  utilities        4109  5263.91
+4  utilities        4959  5140.33
+5     travel        3616  5113.77
+6     travel        4260  5112.68
+7    grocery         106  5071.37
+8    grocery        4094  5055.02
+9     online          82  5047.08
+--- cell 7: jdbc = dict(url=os.environ["JDBC_URL"], user=os.environ["JDBC_USER"], 
+           dt   category  txn_count  total_amount  avg_risk  accounts
+0  2026-11-25     dining      32989    8306366.46    0.5036      2500
+1  2026-11-25       fuel      32990    8241628.76    0.4996      2500
+2  2026-11-25    grocery      32337    8067139.02    0.4989      2457
+3  2026-11-25     online      32336    8099270.76    0.6157      2456
+4  2026-11-25     travel      32337    8103816.90    0.6681      2457
+5  2026-11-25  utilities      32990    8308115.50    0.5037      2500
+--- cell 8: spark.stop()
+
+NOTEBOOK_OK

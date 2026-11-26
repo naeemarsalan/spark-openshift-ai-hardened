@@ -1,0 +1,9 @@
+== build application image oci.arsalan.io/spark/spark-examples:4.3.0-3 (FROM oci.arsalan.io/spark/spark-hi:4.3.0-3)
+== pipeline (uid 31465:0)
+  PASS 1. PySpark ETL (spark-submit)
+       ETL_OK raw=200000 curated=195979 rejected=4021 summary_rows=6
+  PASS 2. Scala report (spark-submit --class)
+       SCALA_REPORT_OK categories=6 top_n=3 rows=18 high_risk_txns=107344
+  PASS 3. Spark Connect client
+       CONNECT_EXAMPLE_OK txns=195979 categories=6 bands={'medium': 58875, 'small': 19320, 'large': 117784}
+== 3 passed, 0 failed

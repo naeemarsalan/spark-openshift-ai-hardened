@@ -1,0 +1,33 @@
+== cluster: https://api.spark.sandbox660.opentlc.com:6443  namespace: spark-demo  image: oci.arsalan.io/spark/spark-hi:4.3.0-3
+  PASS CRD sparkapplications.sparkoperator.k8s.io present
+  PASS CRD sparkconnects.sparkoperator.k8s.io present
+  info: RHOAI 3.5.4  spark operator: 
+  PASS SparkApplication spark-pi-scala: Pi is roughly 3.1416871570843576
+  FAIL SparkApplication s3-jdbc-python (state=FAILED)
+      driver container failed with ExitCode: 2, Reason: Error
+      25s         Normal    Killing             pod/spark-pi-c8d09ba21430a642-exec-1   Stopping container spark-kubernetes-executor
+      25s         Normal    Killing             pod/spark-pi-c8d09ba21430a642-exec-2   Stopping container spark-kubernetes-executor
+      10s         Warning   FailedMount         pod/s3-jdbc-python-driver              MountVolume.SetUp failed for volume "spark-conf-volume-driver" : configmap "spark-drv-9e4c77a21431b533-conf-map" not found
+      10s         Warning   FailedMount         pod/s3-jdbc-python-driver              MountVolume.SetUp failed for volume "pod-template-volume" : configmap "s3-jdbc-python-4d3f06a21431a72d-driver-podspec-conf-map" not found
+      9s          Normal    Started             pod/s3-jdbc-python-driver              Started container spark-kubernetes-driver
+      9s          Normal    Created             pod/s3-jdbc-python-driver              Created container: spark-kubernetes-driver
+      9s          Normal    Pulled              pod/s3-jdbc-python-driver              Container image "oci.arsalan.io/spark/spark-hi:4.3.0-3" already present on machine
+      9s          Normal    AddedInterface      pod/s3-jdbc-python-driver              Add eth0 [10.131.0.33/23] from ovn-kubernetes
+      ---
+      WARNING: Using incubator modules: jdk.incubator.vector
+      26/11/25 19:32:15 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+      /usr/bin/python3.12: can't open file '/jobs/s3_jdbc.py': [Errno 2] No such file or directory
+  PASS SparkConnect server pod ready
+  PASS Connect client: CONNECT_SMOKE_OK server_version=4.3.0
+  PASS Connect client: S3A + JDBC round-trip
+== SCC / UID of every Spark pod
+  oai-connect-client     restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.3.0-3
+  s3-jdbc-python-driver  restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.3.0-3
+  spark-connect-exec-1   restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.3.0-3
+  spark-connect-exec-2   restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.3.0-3
+  spark-connect-server   restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.3.0-3
+  spark-pi-scala-driver  restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.3.0-3
+  PASS all 6 Spark pods admitted by restricted-v2
+  PASS all Spark pods run as a namespace-assigned UID
+== 8 passed, 1 failed
+   manual step: workbench test in deploy/openshift-ai/workbench-notebook.md

@@ -1,0 +1,11 @@
+# Python packages for PySpark executors/drivers and the Spark Connect Python client.
+# Lower bounds are Spark 4.3.0's own minimums (python/packaging/classic/setup.py).
+# pyspark and py4j themselves come from the Spark distribution, not PyPI.
+numpy>=1.23.2
+# PySpark 4.3 warns that pandas >= 3 is not fully supported yet.
+pandas>=2.2.0,<3
+pyarrow>=18.0.0
+grpcio>=1.76.0
+grpcio-status>=1.76.0
+googleapis-common-protos>=1.71.0
+zstandard>=0.25.0

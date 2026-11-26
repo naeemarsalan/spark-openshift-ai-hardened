@@ -1,0 +1,28 @@
+# ServiceAccount used by Spark drivers and the Spark Connect server to create executor pods.
+# Namespaced Role only - no cluster-wide permissions, no SCC grants: the pods run under
+# the default restricted-v2 SCC.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spark
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: spark-driver
+rules:
+  - apiGroups: [""]
+    resources: [pods, services, configmaps, persistentvolumeclaims]
+    verbs: [get, list, watch, create, update, patch, delete, deletecollection]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: spark-driver
+subjects:
+  - kind: ServiceAccount
+    name: spark
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: spark-driver

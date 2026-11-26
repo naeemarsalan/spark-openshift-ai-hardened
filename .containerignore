@@ -1,0 +1,7 @@
+.git
+reports
+docs
+deploy
+tests
+artifacts/spark/*.asc
+artifacts/spark/KEYS
