@@ -55,12 +55,12 @@ Other Spark versions on the same cluster: [compatibility.md](compatibility.md).
 
 | Test | `spark-hi` | `spark-ubi9` |
 |---|---|---|
-| `tests/cluster-test-openshift-ai.sh` | ✅ [9 / 9](results/openshift/4.2.1-hi-operator.log) | ✅ [9 / 9](results/openshift/4.2.1-ubi9-operator.log) |
-| `examples/run-cluster.sh` | ✅ [5 / 5](results/openshift/4.2.1-hi-examples.log) | ✅ [5 / 5](results/openshift/4.2.1-ubi9-examples.log) ¹ |
-| `tests/security-cluster.sh` | ✅ [10 / 10](results/openshift/4.2.1-hi-security.log) | ✅ [10 / 10](results/openshift/4.2.1-ubi9-security.log) |
-| `tests/cluster-test.sh` | ✅ [8 / 8](results/openshift/4.2.1-hi-native.log) | ✅ [8 / 8](results/openshift/4.2.1-ubi9-native.log) |
-| `tests/compat-clients.sh` | ✅ [7 / 7](results/openshift/4.2.1-hi-clients.log) | ✅ [7 / 7](results/openshift/4.2.1-ubi9-clients.log) |
-| `tests/workbench-test.sh` ² | ✅ [pass](results/openshift/4.2.1-hi-workbench.log) | ✅ [pass](results/openshift/4.2.1-ubi9-workbench.log) |
+| `tests/cluster-test-openshift-ai.sh` | [9 / 9](results/openshift/4.2.1-hi-operator.log) | [9 / 9](results/openshift/4.2.1-ubi9-operator.log) |
+| `examples/run-cluster.sh` | [5 / 5](results/openshift/4.2.1-hi-examples.log) | [5 / 5](results/openshift/4.2.1-ubi9-examples.log) ¹ |
+| `tests/security-cluster.sh` | [10 / 10](results/openshift/4.2.1-hi-security.log) | [10 / 10](results/openshift/4.2.1-ubi9-security.log) |
+| `tests/cluster-test.sh` | [8 / 8](results/openshift/4.2.1-hi-native.log) | [8 / 8](results/openshift/4.2.1-ubi9-native.log) |
+| `tests/compat-clients.sh` | [7 / 7](results/openshift/4.2.1-hi-clients.log) | [7 / 7](results/openshift/4.2.1-ubi9-clients.log) |
+| `tests/workbench-test.sh` ² | [pass](results/openshift/4.2.1-hi-workbench.log) | [pass](results/openshift/4.2.1-ubi9-workbench.log) |
 
 **What each test covers**
 
@@ -83,7 +83,7 @@ client versions are covered by `compat-clients.sh`.
 
 | Test | `docker.io/apache/spark:4.2.1` |
 |---|---|
-| `tests/cluster-test-openshift-ai.sh` | ❌ [5 / 9](results/openshift/dockerhub-4.2.1-operator.log) |
+| `tests/cluster-test-openshift-ai.sh` | [5 / 9](results/openshift/dockerhub-4.2.1-operator.log) |
 
 - Every pod was admitted by `restricted-v2`, and the Spark Connect server started.
 - Both `SparkApplication` jobs failed. The first error is
@@ -254,9 +254,9 @@ from a workbench (S3 read, pandas UDF on the executors, Spark SQL, JDBC read):
 
 | Client | Source | Result against the 4.2.1 server |
 |---|---|---|
-| `pyspark-client` 4.0.1, 4.1.2, 4.2.0 | Red Hat's index (workbench default) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) |
-| `pyspark-client` 4.0.5, 4.1.4, 4.2.1, 4.3.0 | `--index-url https://pypi.org/simple` | ✅ [pass](results/openshift/4.2.1-hi-clients.log) |
-| Notebook in a workbench, client 4.2.0 | Red Hat's index | ✅ [pass](results/openshift/4.2.1-hi-workbench.log) |
+| `pyspark-client` 4.0.1, 4.1.2, 4.2.0 | Red Hat's index (workbench default) | [pass](results/openshift/4.2.1-hi-clients.log) |
+| `pyspark-client` 4.0.5, 4.1.4, 4.2.1, 4.3.0 | `--index-url https://pypi.org/simple` | [pass](results/openshift/4.2.1-hi-clients.log) |
+| Notebook in a workbench, client 4.2.0 | Red Hat's index | [pass](results/openshift/4.2.1-hi-workbench.log) |
 
 Full client and server matrix: [compatibility.md](compatibility.md#notebook-client-against-server).
 

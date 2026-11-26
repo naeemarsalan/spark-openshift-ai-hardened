@@ -35,10 +35,10 @@ Hardened image, OpenShift 4.20.27, OpenShift AI 3.5.4, `restricted-v2`, no SCC g
 
 | Spark | Image tag | Hardening checks | Local functional | Operator | Without the operator |
 |---|---|---|---|---|---|
-| 4.0.5 | `spark-hi:4.0.5-2` | ✅ [16 / 16](results/image-checks/verify-spark-hi-4.0.5.txt) | ✅ [11 / 11](results/compat/4.0.5-local-smoke.log) | ✅ [9 / 9](results/compat/4.0.5-operator.log) | ✅ [8 / 8](results/compat/4.0.5-native.log) |
-| 4.1.4 | `spark-hi:4.1.4-2` | ✅ [16 / 16](results/image-checks/verify-spark-hi-4.1.4.txt) | ✅ [11 / 11](results/compat/4.1.4-local-smoke.log) | ✅ [9 / 9](results/compat/4.1.4-operator.log) | ✅ [8 / 8](results/compat/4.1.4-native.log) |
-| **4.2.1** (default) | `spark-hi:4.2.1-2` | ✅ [16 / 16](results/image-checks/verify-spark-hi-4.2.1.txt) | ✅ [11 / 11](results/local/smoke-spark-hi.log) | ✅ [9 / 9](results/openshift/4.2.1-hi-operator.log) | ✅ [8 / 8](results/openshift/4.2.1-hi-native.log) |
-| 4.3.0 | `spark-hi:4.3.0-4` | ✅ [16 / 16](results/image-checks/verify-spark-hi-4.3.0.txt) | ✅ [11 / 11](results/compat/4.3.0-local-smoke.log) | ✅ [9 / 9](results/compat/4.3.0-operator.log) | ✅ [8 / 8](results/compat/4.3.0-native.log) |
+| 4.0.5 | `spark-hi:4.0.5-2` | [16 / 16](results/image-checks/verify-spark-hi-4.0.5.txt) | [11 / 11](results/compat/4.0.5-local-smoke.log) | [9 / 9](results/compat/4.0.5-operator.log) | [8 / 8](results/compat/4.0.5-native.log) |
+| 4.1.4 | `spark-hi:4.1.4-2` | [16 / 16](results/image-checks/verify-spark-hi-4.1.4.txt) | [11 / 11](results/compat/4.1.4-local-smoke.log) | [9 / 9](results/compat/4.1.4-operator.log) | [8 / 8](results/compat/4.1.4-native.log) |
+| **4.2.1** (default) | `spark-hi:4.2.1-2` | [16 / 16](results/image-checks/verify-spark-hi-4.2.1.txt) | [11 / 11](results/local/smoke-spark-hi.log) | [9 / 9](results/openshift/4.2.1-hi-operator.log) | [8 / 8](results/openshift/4.2.1-hi-native.log) |
+| 4.3.0 | `spark-hi:4.3.0-4` | [16 / 16](results/image-checks/verify-spark-hi-4.3.0.txt) | [11 / 11](results/compat/4.3.0-local-smoke.log) | [9 / 9](results/compat/4.3.0-operator.log) | [8 / 8](results/compat/4.3.0-native.log) |
 
 **What each column runs**
 
@@ -63,13 +63,13 @@ default; PyPI needs `--index-url`.
 
 | `pyspark-client` | Source | Server 4.0.5 | Server 4.1.4 | Server 4.2.1 | Server 4.3.0 |
 |---|---|---|---|---|---|
-| 4.0.1 | Red Hat's index | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
-| 4.1.2 | Red Hat's index | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
-| 4.2.0 | Red Hat's index | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
-| 4.0.5 | PyPI | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
-| 4.1.4 | PyPI | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
-| 4.2.1 | PyPI | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
-| 4.3.0 | PyPI | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
+| 4.0.1 | Red Hat's index | [pass](results/compat/4.0.5-clients.log) | [pass](results/compat/4.1.4-clients.log) | [pass](results/openshift/4.2.1-hi-clients.log) | [pass](results/compat/4.3.0-clients.log) |
+| 4.1.2 | Red Hat's index | [pass](results/compat/4.0.5-clients.log) | [pass](results/compat/4.1.4-clients.log) | [pass](results/openshift/4.2.1-hi-clients.log) | [pass](results/compat/4.3.0-clients.log) |
+| 4.2.0 | Red Hat's index | [pass](results/compat/4.0.5-clients.log) | [pass](results/compat/4.1.4-clients.log) | [pass](results/openshift/4.2.1-hi-clients.log) | [pass](results/compat/4.3.0-clients.log) |
+| 4.0.5 | PyPI | [pass](results/compat/4.0.5-clients.log) | [pass](results/compat/4.1.4-clients.log) | [pass](results/openshift/4.2.1-hi-clients.log) | [pass](results/compat/4.3.0-clients.log) |
+| 4.1.4 | PyPI | [pass](results/compat/4.0.5-clients.log) | [pass](results/compat/4.1.4-clients.log) | [pass](results/openshift/4.2.1-hi-clients.log) | [pass](results/compat/4.3.0-clients.log) |
+| 4.2.1 | PyPI | [pass](results/compat/4.0.5-clients.log) | [pass](results/compat/4.1.4-clients.log) | [pass](results/openshift/4.2.1-hi-clients.log) | [pass](results/compat/4.3.0-clients.log) |
+| 4.3.0 | PyPI | [pass](results/compat/4.0.5-clients.log) | [pass](results/compat/4.1.4-clients.log) | [pass](results/openshift/4.2.1-hi-clients.log) | [pass](results/compat/4.3.0-clients.log) |
 
 > [!TIP]
 > In a workbench, `%pip install "pyspark-client>=4.2,<4.3"` gets 4.2.0 from Red Hat's index

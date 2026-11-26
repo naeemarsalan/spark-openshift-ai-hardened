@@ -234,12 +234,12 @@ OpenShift 4.20.27, OpenShift AI 3.5.4, Spark 4.2.1, 2026-11-26. [Details](docs/o
 
 | Test | `spark-hi` | `spark-ubi9` |
 |---|---|---|
-| Operator: `SparkApplication` and `SparkConnect` | ✅ [9 / 9](docs/results/openshift/4.2.1-hi-operator.log) | ✅ [9 / 9](docs/results/openshift/4.2.1-ubi9-operator.log) |
-| Example pipeline through the operator | ✅ [5 / 5](docs/results/openshift/4.2.1-hi-examples.log) | ✅ [5 / 5](docs/results/openshift/4.2.1-ubi9-examples.log) |
-| Cluster security: NetworkPolicy, RBAC, credentials | ✅ [10 / 10](docs/results/openshift/4.2.1-hi-security.log) | ✅ [10 / 10](docs/results/openshift/4.2.1-ubi9-security.log) |
-| `spark-submit` without the operator | ✅ [8 / 8](docs/results/openshift/4.2.1-hi-native.log) | ✅ [8 / 8](docs/results/openshift/4.2.1-ubi9-native.log) |
-| Notebook clients, 7 versions | ✅ [7 / 7](docs/results/openshift/4.2.1-hi-clients.log) | ✅ [7 / 7](docs/results/openshift/4.2.1-ubi9-clients.log) |
-| Notebook in a workbench | ✅ [1 / 1](docs/results/openshift/4.2.1-hi-workbench.log) | ✅ [1 / 1](docs/results/openshift/4.2.1-ubi9-workbench.log) |
+| Operator: `SparkApplication` and `SparkConnect` | [9 / 9](docs/results/openshift/4.2.1-hi-operator.log) | [9 / 9](docs/results/openshift/4.2.1-ubi9-operator.log) |
+| Example pipeline through the operator | [5 / 5](docs/results/openshift/4.2.1-hi-examples.log) | [5 / 5](docs/results/openshift/4.2.1-ubi9-examples.log) |
+| Cluster security: NetworkPolicy, RBAC, credentials | [10 / 10](docs/results/openshift/4.2.1-hi-security.log) | [10 / 10](docs/results/openshift/4.2.1-ubi9-security.log) |
+| `spark-submit` without the operator | [8 / 8](docs/results/openshift/4.2.1-hi-native.log) | [8 / 8](docs/results/openshift/4.2.1-ubi9-native.log) |
+| Notebook clients, 7 versions | [7 / 7](docs/results/openshift/4.2.1-hi-clients.log) | [7 / 7](docs/results/openshift/4.2.1-ubi9-clients.log) |
+| Notebook in a workbench | [1 / 1](docs/results/openshift/4.2.1-hi-workbench.log) | [1 / 1](docs/results/openshift/4.2.1-ubi9-workbench.log) |
 
 ### Spark versions tested
 
@@ -248,24 +248,24 @@ Hardened image, same cluster. Logs and the client matrix:
 
 | Spark | Operator | `spark-submit` without the operator | Notebook clients passing |
 |---|---|---|---|
-| 4.0.5 | ✅ 9 / 9 | ✅ 8 / 8 | ✅ 7 / 7 |
-| 4.1.4 | ✅ 9 / 9 | ✅ 8 / 8 | ✅ 7 / 7 |
-| **4.2.1** (default) | ✅ 9 / 9 | ✅ 8 / 8 | ✅ 7 / 7 |
-| 4.3.0 | ✅ 9 / 9 | ✅ 8 / 8 | ✅ 7 / 7 |
+| 4.0.5 | 9 / 9 | 8 / 8 | 7 / 7 |
+| 4.1.4 | 9 / 9 | 8 / 8 | 7 / 7 |
+| **4.2.1** (default) | 9 / 9 | 8 / 8 | 7 / 7 |
+| 4.3.0 | 9 / 9 | 8 / 8 | 7 / 7 |
 
 ## Requirement checklist
 
-| | Requirement | How it is met | Checked by |
-|---|---|---|---|
-| ✅ | Spark Connect and `spark-submit` | [`image/entrypoint.sh`](image/entrypoint.sh) modes `driver`, `executor`, `connect` | Operator test 9 / 9 |
-| ✅ | Scala and Python executors | One image with the JVM, Python 3.12 and the Arrow stack | Scala SparkPi and a PySpark pandas UDF on the cluster |
-| ✅ | S3 and database libraries | [`image/jars.txt`](image/jars.txt) | S3 and JDBC round-trips on the cluster; PostgreSQL and SQL Server engines locally |
-| ✅ | No secrets in the image | Nothing in git, `ENV` or layers. Credentials come from Secrets at run time | `verify-image.sh`; Trivy secret scan: 0; no credential in any spec or log |
-| ✅ | Non-root default user | `USER 1001:0` | Ran as UID `1000770000` on the cluster |
-| ✅ | No downloads during the build | Build copies from `./artifacts`, checked against [`artifacts.sha256`](artifacts.sha256) | `verify-image.sh` build-history check |
-| ✅ | No end-of-life software | Spark 4.2.1, OpenJDK 21, Python 3.12; ten bundled library families replaced | [`image/jars.txt`](image/jars.txt), scan reports |
-| ✅ | `restricted-v2` compatible | No fixed UID, all capabilities dropped, no privilege escalation, `RuntimeDefault` seccomp | Every Spark pod admitted by `restricted-v2`, no SCC granted |
-| ✅ | Security scanning | Trivy and Grype on every build, compared with a regular build and the Docker Hub image | [docs/scan-comparison.md](docs/scan-comparison.md) |
+| Requirement | How it is met | Checked by |
+|---|---|---|
+| Spark Connect and `spark-submit` | [`image/entrypoint.sh`](image/entrypoint.sh) modes `driver`, `executor`, `connect` | Operator test 9 / 9 |
+| Scala and Python executors | One image with the JVM, Python 3.12 and the Arrow stack | Scala SparkPi and a PySpark pandas UDF on the cluster |
+| S3 and database libraries | [`image/jars.txt`](image/jars.txt) | S3 and JDBC round-trips on the cluster; PostgreSQL and SQL Server engines locally |
+| No secrets in the image | Nothing in git, `ENV` or layers. Credentials come from Secrets at run time | `verify-image.sh`; Trivy secret scan: 0; no credential in any spec or log |
+| Non-root default user | `USER 1001:0` | Ran as UID `1000770000` on the cluster |
+| No downloads during the build | Build copies from `./artifacts`, checked against [`artifacts.sha256`](artifacts.sha256) | `verify-image.sh` build-history check |
+| No end-of-life software | Spark 4.2.1, OpenJDK 21, Python 3.12; ten bundled library families replaced | [`image/jars.txt`](image/jars.txt), scan reports |
+| `restricted-v2` compatible | No fixed UID, all capabilities dropped, no privilege escalation, `RuntimeDefault` seccomp | Every Spark pod admitted by `restricted-v2`, no SCC granted |
+| Security scanning | Trivy and Grype on every build, compared with a regular build and the Docker Hub image | [docs/scan-comparison.md](docs/scan-comparison.md) |
 
 ## Repository layout
 

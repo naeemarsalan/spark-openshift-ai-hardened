@@ -344,22 +344,22 @@ Run them with `hack/verify-image.sh <image>`.
 
 | Check | Regular UBI 9 | `spark-ubi9` | `spark-hi` |
 |---|---|---|---|
-| `USER` is numeric and non-root | ✅ | ✅ | ✅ |
-| Primary group is 0 | ❌ | ✅ | ✅ |
-| No credential-looking `ENV` | ✅ | ✅ | ✅ |
-| Build history: no secrets, no downloads | ❌ | ✅ | ✅ |
-| No privileged ports | ✅ | ✅ | ✅ |
-| No setuid/setgid binaries | ❌ | ✅ | ✅ |
-| No world-writable files | ✅ | ✅ | ✅ |
-| `/etc/passwd` not writable | ✅ | ✅ | ✅ |
-| Spark and Python packages read-only | ❌ | ✅ | ✅ |
-| `work-dir` writable through group 0 only | ❌ | ✅ | ✅ |
-| No private keys or keystores | ✅ | ✅ | ✅ |
-| No PEM private-key blocks | ✅ | ✅ | ✅ |
-| No package manager, compiler or download tool ¹ | ✅ | ✅ | ✅ |
-| No `pip` / `setuptools` | ❌ | ✅ | ✅ |
-| No build caches | ❌ | ✅ | ✅ |
-| Starts as arbitrary UID, no capabilities, read-only rootfs | ✅ | ✅ | ✅ |
+| `USER` is numeric and non-root | pass | pass | pass |
+| Primary group is 0 | **fail** | pass | pass |
+| No credential-looking `ENV` | pass | pass | pass |
+| Build history: no secrets, no downloads | **fail** | pass | pass |
+| No privileged ports | pass | pass | pass |
+| No setuid/setgid binaries | **fail** | pass | pass |
+| No world-writable files | pass | pass | pass |
+| `/etc/passwd` not writable | pass | pass | pass |
+| Spark and Python packages read-only | **fail** | pass | pass |
+| `work-dir` writable through group 0 only | **fail** | pass | pass |
+| No private keys or keystores | pass | pass | pass |
+| No PEM private-key blocks | pass | pass | pass |
+| No package manager, compiler or download tool ¹ | pass | pass | pass |
+| No `pip` / `setuptools` | **fail** | pass | pass |
+| No build caches | **fail** | pass | pass |
+| Starts as arbitrary UID, no capabilities, read-only rootfs | pass | pass | pass |
 | **Total** | **9 / 16** | **16 / 16** | **16 / 16** |
 
 ¹ On RHEL-based images this check tolerates `dnf`/`microdnf`, `rpm` and `curl`, because UBI

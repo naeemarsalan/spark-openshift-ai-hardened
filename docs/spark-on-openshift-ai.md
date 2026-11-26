@@ -45,16 +45,16 @@ started with different arguments.
 
 **You bring:**
 
-| | Item | Where this repo helps |
-|---|---|---|
-| ☐ | **A Spark image** | [bring-your-own-image.md](bring-your-own-image.md) and the two Containerfiles |
-| ☐ | A registry the cluster can pull from, and a pull secret if it is private | [walkthrough.md](walkthrough.md#8-prepare-the-cluster) |
-| ☐ | A project (namespace) where you are administrator | [walkthrough.md](walkthrough.md#8-prepare-the-cluster) |
-| ☐ | A service account and Role for the driver | [`00-rbac.yaml`](../deploy/openshift-ai/00-rbac.yaml) |
-| ☐ | Your data: S3-compatible storage, databases | The tests start throwaway ones; yours replace them |
-| ☐ | Credentials, as Kubernetes Secrets | [`examples/README.md`](../examples/README.md) lists the keys the examples read |
-| ☐ | Your job code | [`examples/`](../examples) |
-| ☐ | A NetworkPolicy for Spark Connect, if you use it | [`20-sparkconnect.yaml`](../deploy/openshift-ai/20-sparkconnect.yaml) |
+| Item | Where this repo helps |
+|---|---|
+| **A Spark image** | [bring-your-own-image.md](bring-your-own-image.md) and the two Containerfiles |
+| A registry the cluster can pull from, and a pull secret if it is private | [walkthrough.md](walkthrough.md#8-prepare-the-cluster) |
+| A project (namespace) where you are administrator | [walkthrough.md](walkthrough.md#8-prepare-the-cluster) |
+| A service account and Role for the driver | [`00-rbac.yaml`](../deploy/openshift-ai/00-rbac.yaml) |
+| Your data: S3-compatible storage, databases | The tests start throwaway ones; yours replace them |
+| Credentials, as Kubernetes Secrets | [`examples/README.md`](../examples/README.md) lists the keys the examples read |
+| Your job code | [`examples/`](../examples) |
+| A NetworkPolicy for Spark Connect, if you use it | [`20-sparkconnect.yaml`](../deploy/openshift-ai/20-sparkconnect.yaml) |
 
 **You do not need:**
 

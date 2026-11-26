@@ -66,42 +66,42 @@ from scratch.
 
 Both files have the same two stages. The Spark layer is identical; only the base differs.
 
-**Legend:** 🟢 change freely · 🟡 change with care · 🔴 do not remove
+The last column says how safe each part is to change: **free**, **with care**, or **keep** (do not remove).
 
 ### Stage 1: builder (thrown away)
 
-| Lines | What they do | |
+| Lines | What they do | Change? |
 |---|---|---|
-| `ARG SPARK_VERSION`, `PYTHON_VERSION`, `JAVA_MAJOR` | Versions. Set them in [`versions.env`](../versions.env), not here | 🟢 |
-| `dnf install tar gzip findutils python` | Tools needed only to unpack and assemble | 🟢 |
-| `COPY artifacts.sha256 ...` and `COPY artifacts/` | Brings in the pre-downloaded Spark, jars and wheels | 🔴 |
-| `RUN ./assemble.sh` | Verifies every file against the lock, unpacks Spark, swaps jars, installs Python packages, sets ownership | 🔴 |
+| `ARG SPARK_VERSION`, `PYTHON_VERSION`, `JAVA_MAJOR` | Versions. Set them in [`versions.env`](../versions.env), not here | free |
+| `dnf install tar gzip findutils python` | Tools needed only to unpack and assemble | free |
+| `COPY artifacts.sha256 ...` and `COPY artifacts/` | Brings in the pre-downloaded Spark, jars and wheels | keep |
+| `RUN ./assemble.sh` | Verifies every file against the lock, unpacks Spark, swaps jars, installs Python packages, sets ownership | keep |
 
 [`image/assemble.sh`](../image/assemble.sh) is where the Spark layer is made. Its steps:
 
-| Step | What it does | |
+| Step | What it does | Change? |
 |---|---|---|
-| 1 | `sha256sum -c`: every artifact must match `artifacts.sha256` | 🔴 |
-| 2 | Unpack Spark; delete YARN, SparkR, sample data, Windows scripts | 🟡 keep `sbin/` and `bin/` |
-| 3 | Delete jars listed in `jars-remove.txt`; add jars from `jars.txt`; fail on duplicates | 🟢 edit the two lists |
-| 4 | Install Python wheels with `pip --no-index` (no network, pip itself is not installed) | 🟢 edit `requirements.txt` |
-| 5 | `chown root`, read-only for everyone else, `work-dir` group-writable | 🔴 |
+| 1 | `sha256sum -c`: every artifact must match `artifacts.sha256` | keep |
+| 2 | Unpack Spark; delete YARN, SparkR, sample data, Windows scripts | with care: keep `sbin/` and `bin/` |
+| 3 | Delete jars listed in `jars-remove.txt`; add jars from `jars.txt`; fail on duplicates | free: edit the two lists |
+| 4 | Install Python wheels with `pip --no-index` (no network, pip itself is not installed) | free: edit `requirements.txt` |
+| 5 | `chown root`, read-only for everyone else, `work-dir` group-writable | keep |
 
 ### Stage 2: the image you ship
 
-| Lines | What they do | |
+| Lines | What they do | Change? |
 |---|---|---|
-| Hardened: `dnf install --installroot=/rootfs ...` then `FROM scratch` + `COPY /rootfs/ /` | Builds a root filesystem with only the RPMs Spark needs, then starts from an empty image | 🟡 add RPMs here if a job needs a native library |
-| UBI 9: `microdnf install java python procps-ng` | The same packages on top of UBI minimal | 🟡 |
-| `<os-release package>` (hardened only) | Without it, scanners cannot identify the OS and silently skip every package | 🔴 |
-| UBI 9: `find / -perm /6000 -exec chmod a-s` | Strips setuid bits | 🔴 |
-| `echo "spark:x:1001:0:..." >> /etc/passwd` | A name for the default user. `/etc/passwd` itself stays read-only | 🟡 |
-| `COPY entrypoint.sh decom.sh` | Entrypoint and the executor decommission script | 🔴 |
-| `COPY spark-defaults.conf log4j2.properties` | Defaults: temp paths under `/tmp`, S3 credential providers, quiet Spark Connect request logging | 🟡 keep the four Connect logger lines |
-| `ENV SPARK_LOG_DIR=/tmp/... SPARK_PID_DIR=/tmp/...` | Needed because the operator bypasses the entrypoint for Spark Connect | 🔴 |
-| `ENV PYSPARK_PYTHON=...` | Pins the executor Python | 🟡 keep it equal to the workbench's Python minor version |
-| `USER 1001:0` | Numeric, non-root, group 0. Lets the kubelet verify `runAsNonRoot` | 🔴 |
-| `ENTRYPOINT ["/opt/entrypoint.sh"]` | `driver`, `executor`, `connect`, or any command | 🔴 |
+| Hardened: `dnf install --installroot=/rootfs ...` then `FROM scratch` + `COPY /rootfs/ /` | Builds a root filesystem with only the RPMs Spark needs, then starts from an empty image | with care: add RPMs here if a job needs a native library |
+| UBI 9: `microdnf install java python procps-ng` | The same packages on top of UBI minimal | with care |
+| `<os-release package>` (hardened only) | Without it, scanners cannot identify the OS and silently skip every package | keep |
+| UBI 9: `find / -perm /6000 -exec chmod a-s` | Strips setuid bits | keep |
+| `echo "spark:x:1001:0:..." >> /etc/passwd` | A name for the default user. `/etc/passwd` itself stays read-only | with care |
+| `COPY entrypoint.sh decom.sh` | Entrypoint and the executor decommission script | keep |
+| `COPY spark-defaults.conf log4j2.properties` | Defaults: temp paths under `/tmp`, S3 credential providers, quiet Spark Connect request logging | with care: keep the four Connect logger lines |
+| `ENV SPARK_LOG_DIR=/tmp/... SPARK_PID_DIR=/tmp/...` | Needed because the operator bypasses the entrypoint for Spark Connect | keep |
+| `ENV PYSPARK_PYTHON=...` | Pins the executor Python | with care: keep it equal to the workbench's Python minor version |
+| `USER 1001:0` | Numeric, non-root, group 0. Lets the kubelet verify `runAsNonRoot` | keep |
+| `ENTRYPOINT ["/opt/entrypoint.sh"]` | `driver`, `executor`, `connect`, or any command | keep |
 
 ## Make it yours
 
