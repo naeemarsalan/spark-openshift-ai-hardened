@@ -74,6 +74,8 @@ PIP_INDEX_URL=https://artifactory.example.com/api/pypi/pypi-remote/simple \
 make fetch
 ```
 
+Credentials, a private CA, an RPM mirror and proxies: [enterprise.md](enterprise.md).
+
 </details>
 
 <details>

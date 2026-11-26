@@ -40,6 +40,7 @@ OpenShift 4.20 with OpenShift AI 3.5.4.
 | Follow every step with expected output | [docs/walkthrough.md](docs/walkthrough.md) |
 | Know what the hardening changed | [docs/hardening.md](docs/hardening.md) |
 | See scan numbers before and after | [docs/scan-comparison.md](docs/scan-comparison.md) |
+| Use my own Artifactory, registry, proxy or CA | [docs/enterprise.md](docs/enterprise.md) |
 | Run it on OpenShift AI, or fix a job that fails there | [docs/openshift-ai.md](docs/openshift-ai.md) |
 | Read the test logs and scan reports | [docs/results/](docs/results/) |
 
@@ -91,7 +92,7 @@ Use the controls on the diagram to zoom, pan or open it full screen.
 
 - `podman`, `make`, `curl`, `gpg`
 - `python3` with `pip`
-- Internet access, or internal mirrors, for `make fetch` only
+- Internet access, or [internal mirrors](docs/enterprise.md), for `make fetch` only
 
 **Cluster**
 

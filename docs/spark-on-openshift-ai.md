@@ -49,6 +49,7 @@ started with different arguments.
 |---|---|
 | **A Spark image** | [bring-your-own-image.md](bring-your-own-image.md) and the two Containerfiles |
 | A registry the cluster can pull from, and a pull secret if it is private | [walkthrough.md](walkthrough.md#8-prepare-the-cluster) |
+| Your CA certificates, if S3, databases or the registry use a private CA | [enterprise.md](enterprise.md#trust-your-own-ca-in-spark-pods) |
 | A project (namespace) where you are administrator | [walkthrough.md](walkthrough.md#8-prepare-the-cluster) |
 | A service account and Role for the driver | [`00-rbac.yaml`](../deploy/openshift-ai/00-rbac.yaml) |
 | Your data: S3-compatible storage, databases | The tests start throwaway ones; yours replace them |

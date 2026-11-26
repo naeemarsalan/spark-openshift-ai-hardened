@@ -1,0 +1,7 @@
+== cluster: https://api.spark.sandbox660.opentlc.com:6443  namespace: spark-demo  image: oci.arsalan.io/spark/spark-hi:4.2.1-2
+  PASS S3 endpoint https://test-s3-tls.spark-demo.svc:8443, certificate issuer=CN=openshift-service-serving-signer@1795633241
+  PASS without the CA the job fails: PKIX path building failed
+  PASS with the CA the job completes: S3A_OK s3a://spark-smoke/smoke/1f44c4ba
+   s3-custom-ca-driver restricted-v2 uid 1000770000
+  PASS trust init container ran; pod admitted by restricted-v2
+== 4 passed, 0 failed

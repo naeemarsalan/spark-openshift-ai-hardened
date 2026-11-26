@@ -24,6 +24,7 @@
 | `4.2.1-<base>-native.log` | `spark-submit` without the operator: 8 / 8 |
 | `4.2.1-<base>-clients.log` | Seven `pyspark-client` versions against the server: 7 / 7 |
 | `4.2.1-<base>-workbench.log` | The notebook executed inside a workbench pod, with cell outputs |
+| `4.2.1-<base>-custom-ca.log` | A job against S3 over TLS with a private CA, without and with the trust init container: 4 / 4 |
 | `dockerhub-4.2.1-operator.log` | The unmodified Docker Hub image through the operator: 5 / 9 |
 | `preflight-spark-hi-4.2.1.log` | `hack/preflight.sh` on the hardened image: 0 failed |
 | `preflight-dockerhub-4.2.1.log` | `hack/preflight.sh` on the Docker Hub image: 1 failed |
@@ -79,3 +80,4 @@ escalation and a read-only root filesystem.
 | `security-local-spark-hi.log` | Spark Connect token and TLS, secrets hygiene: 8 / 8 |
 | `jdbc-drivers-spark-hi.log` | Round-trips against PostgreSQL 16 and SQL Server 2022: 2 / 2 |
 | `examples-local.log` | The three example projects: 3 / 3 |
+| `mirror-local.log` | `make fetch` from a private HTTPS mirror with its own CA and a password: 6 / 6 |

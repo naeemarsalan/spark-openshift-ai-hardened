@@ -113,7 +113,8 @@ The last column says how safe each part is to change: **free**, **with care**, o
 | Add an OS package | Add it to the `dnf install` list in stage 2 |
 | Use a different Spark version | [compatibility.md](compatibility.md) lists the tested ones and how to build each |
 | Ship my job code | Do not put it here. Build a small image `FROM` this one: [`examples/Containerfile`](../examples/Containerfile) |
-| Build without internet access | Point `make fetch` at your mirrors: [walkthrough.md](walkthrough.md#2-fetch-and-lock-the-artifacts) |
+| Build without internet access | Point `make fetch` and the build at your mirrors: [enterprise.md](enterprise.md) |
+| Trust my organisation's CA | [enterprise.md](enterprise.md#trust-your-own-ca-in-spark-pods) |
 
 After any change, `make fetch-update` rewrites `artifacts.sha256`. Review the diff and commit
 it. The build refuses to run if the files and the lock disagree.

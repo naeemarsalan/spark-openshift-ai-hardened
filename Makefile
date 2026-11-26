@@ -6,6 +6,8 @@ FLAVOR      ?= hi
 IMAGE       ?= $(REGISTRY)/$(IMAGE_NAME)-$(FLAVOR):$(IMAGE_TAG)
 ENGINE      ?= podman
 NAMESPACE   ?= spark-demo
+# Extra arguments for the image build, e.g. a mounted .repo file or CA (docs/enterprise.md).
+BUILD_ARGS  ?=
 ifeq ($(FLAVOR),ubi9)
 CONTAINERFILE := Containerfile.ubi9
 BASE_ARGS     := --build-arg BASE_IMAGE=$(UBI9_BASE_IMAGE)
@@ -30,7 +32,7 @@ fetch-update: ## Re-resolve artifacts and rewrite artifacts.sha256 (after a vers
 	hack/fetch-artifacts.sh --update-lock
 
 build: ## Build the image from vendored artifacts
-	$(ENGINE) build --pull=newer -f $(CONTAINERFILE) -t $(IMAGE) $(BASE_ARGS) \
+	$(ENGINE) build --pull=newer -f $(CONTAINERFILE) -t $(IMAGE) $(BASE_ARGS) $(BUILD_ARGS) \
 	  --build-arg SPARK_VERSION=$(SPARK_VERSION) \
 	  --build-arg HADOOP_PROFILE=$(HADOOP_PROFILE) \
 	  --build-arg JAVA_MAJOR=$(JAVA_MAJOR) \

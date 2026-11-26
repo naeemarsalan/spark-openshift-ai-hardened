@@ -1,0 +1,8 @@
+== mirror: https://localhost:29152 (private CA, basic auth)
+  PASS without the CA, curl refuses the certificate
+  PASS without credentials, the mirror answers 401
+  PASS fetch from the mirror: 57 curl downloads, 12 wheels
+  PASS Spark GPG signature verified
+  PASS every file matches artifacts.sha256
+  PASS password not in the log or the artifacts
+== 6 passed, 0 failed
