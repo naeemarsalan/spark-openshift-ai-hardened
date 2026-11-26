@@ -163,7 +163,7 @@ Run these one at a time.
 ```bash
 make test                          # 11 functional checks + operator launch emulation
 tests/security-local.sh <image>    # Spark Connect token and TLS, secrets hygiene
-tests/jdbc-drivers.sh <image>      # round-trips against real PostgreSQL, SQL Server and Oracle
+tests/jdbc-drivers.sh <image>      # round-trips against real PostgreSQL and SQL Server (and Oracle, if you added its driver)
 examples/run-local.sh              # the three example projects
 ```
 
@@ -222,6 +222,15 @@ make push
       --docker-username=<user> --docker-password=<password>
    export PULL_SECRET=spark-pull
    ```
+
+4. Check the cluster, the project and the image in one go.
+
+   ```bash
+   hack/preflight.sh <registry>/spark-hi:<tag>
+   ```
+
+   It ends with `0 failed`. Every `FAIL` line names the fix. What it checks:
+   [spark-on-openshift-ai.md](spark-on-openshift-ai.md#check-before-you-start).
 
 > [!IMPORTANT]
 > Do **not** grant the project any SCC. The point of the image is that it does not need one.

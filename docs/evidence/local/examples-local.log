@@ -1,5 +1,5 @@
-== build application image oci.arsalan.io/spark/spark-examples:4.3.0-3 (FROM oci.arsalan.io/spark/spark-hi:4.3.0-3)
-== pipeline (uid 31465:0)
+== build application image oci.arsalan.io/spark/spark-examples:4.2.1-2 (FROM oci.arsalan.io/spark/spark-hi:4.2.1-2)
+== pipeline (uid 20923:0)
   PASS 1. PySpark ETL (spark-submit)
        ETL_OK raw=200000 curated=195979 rejected=4021 summary_rows=6
   PASS 2. Scala report (spark-submit --class)

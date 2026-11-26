@@ -1,4 +1,4 @@
-== Spark Connect: token + TLS (uid 30483:0)
+== Spark Connect: token + TLS (uid 39790:0)
   PASS valid token over TLS: query + S3 write succeed
   PASS wrong token is rejected (UNAUTHENTICATED)
   PASS missing token is rejected (UNAUTHENTICATED)
@@ -6,6 +6,6 @@
   PASS gRPC port is bound to loopback only (127.0.0.1:15002) - reachable solely through the TLS proxy
 == secrets hygiene
   PASS no secret in the container command line (env-only)
-  PASS token and S3 secret key never appear in server or proxy logs (598 lines checked)
+  PASS token and S3 secret key never appear in server or proxy logs (593 lines checked)
   PASS no secret in any process command line inside the container
 == 8 passed, 0 failed

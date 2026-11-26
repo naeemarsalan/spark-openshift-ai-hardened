@@ -15,7 +15,7 @@
 1. Install the client. It is thin: no JVM, and it pulls pandas, pyarrow and grpcio.
 
    ```python
-   %pip install "pyspark-client>=4.2,<=4.3.0"
+   %pip install "pyspark-client>=4.2,<4.3"
    ```
 
 2. Restart the kernel.
@@ -38,7 +38,7 @@
 
 **Verification**
 
-- `spark.version` prints `4.3.0`. It comes from the server image.
+- `spark.version` prints `4.2.1`. It comes from the server image.
 - The `show()` prints seven rows.
 
 **Troubleshooting**
@@ -46,8 +46,8 @@
 | Symptom | Cause | Fix |
 |---|---|---|
 | `getOrCreate()` hangs (not a refusal) | A NetworkPolicy is dropping the connection | The workbench pod needs the label `opendatahub.io/workbenches=true` and its namespace `opendatahub.io/dashboard=true` |
-| `pip` cannot find `pyspark-client==4.3.0` | Workbenches install from Red Hat's index, which offers 4.0.1, 4.1.2 and 4.2.0 | Use the range above. It installs **4.2.0**, which is tested against the 4.3.0 server |
-| You need an exact client version match | Same as above | Add `--index-url <your PyPI mirror>`. This is tested too |
+| `pip` cannot find `pyspark-client==4.2.1` | Workbenches install from Red Hat's index, which offers 4.0.1, 4.1.2 and 4.2.0 | Use the range above. It installs **4.2.0**, which is tested against the 4.2.1 server |
+| You need a different client version | Same as above | Add `--index-url <your PyPI mirror>`. Tested combinations: [compatibility](../../docs/compatibility.md) |
 | `pip install` cannot reach any index | Disconnected environment | Point `pip` at the internal PyPI mirror, or bake the client into a custom workbench image |
 
 More background: [docs/openshift-ai.md](../../docs/openshift-ai.md#workbench).

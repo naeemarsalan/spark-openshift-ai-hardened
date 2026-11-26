@@ -1,0 +1,55 @@
+== docker.io/apache/spark:4.2.1
+  FAIL USER must be a numeric non-root UID (got 'spark')
+  FAIL USER should be <uid>:0
+  PASS no credential-looking ENV vars
+  FAIL build history
+      RUN |1 spark_uid=185 /bin/sh -c set -ex;     export SPARK_TMP="$(mktemp -d)";     cd $SPARK_TMP;     wget -nv -O spark.tgz "$SPARK_TGZ_URL";     wget -nv -O spark.tgz.asc "$SPARK_TGZ_ASC_URL";     export GNUPGHOME="$(mktemp -d)";     gpg --batch --keyserver hkps://keys.openpgp.org --recv-key "$GPG_KEY" ||     gpg --batch --keyserver hkps://keyserver.ubuntu.com --recv-keys "$GPG_KEY";     gpg --batch --verify spark.tgz.asc spark.tgz;     gpgconf --kill all;     rm -rf "$GNUPGHOME" spark.tgz.asc;         tar -xf spark.tgz --strip-components=1;     chown -R spark:spark .;     mv jars /opt/spark/;     mv RELEASE /opt/spark/;     mv bin /opt/spark/;     mv sbin /opt/spark/;     mv kubernetes/dockerfiles/spark/decom.sh /opt/;     mv examples /opt/spark/;     ln -s "$(basename /opt/spark/examples/jars/spark-examples_*.jar)" /opt/spark/examples/jars/spark-examples.jar;     mv kubernetes/tests /opt/spark/;     mv data /opt/spark/;     mv python/pyspark /opt/spark/python/pyspark/;     mv python/lib /opt/spark/python/lib/;     mv R /opt/spark/;     chmod a+x /opt/decom.sh;     cd ..;     rm -rf "$SPARK_TMP"; # buildkit
+      RUN |1 spark_uid=185 /bin/sh -c set -ex;     apt-get update;     apt-get install -y gnupg2 wget bash tini libc6 libpam-modules krb5-user libnss3 procps net-tools gosu libnss-wrapper libjemalloc2;     mkdir -p /opt/spark;     mkdir /opt/spark/python;     mkdir -p /opt/spark/examples;     mkdir -p /opt/spark/work-dir;     chmod g+w /opt/spark/work-dir;     touch /opt/spark/RELEASE;     chown -R spark:spark /opt/spark;     echo "auth required pam_wheel.so use_uid" >> /etc/pam.d/su;     rm -rf /var/lib/apt/lists/* # buildkit
+      RUN /bin/sh -c set -eux;     ARCH="$(dpkg --print-architecture)";     case "${ARCH}" in        amd64)          ESUM='d7f5d5cf865a2902b70ff549b97586a7d3f234e016f041ab447ea740c7d66d1c';          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_x64_linux_hotspot_21.0.13_9.tar.gz';          ;;        arm64)          ESUM='e3522e707fc7dbe2a72c30746b1e7068301a0213ecd213d4491f35a14eb55578';          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.13_9.tar.gz';          ;;        ppc64el)          ESUM='cfaedcc659213833ead9c2a50987d8dcbd0e7a2d82217abb43acb64c0dd3d8cc';          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_ppc64le_linux_hotspot_21.0.13_9.tar.gz';          ;;        s390x)          ESUM='597271ef81f7e4d0e2b86aa6e4d484af194253bdf238908a8394b78970dff713';          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_s390x_linux_hotspot_21.0.13_9.tar.gz';          ;;        *)          echo "Unsupported arch: ${ARCH}";          exit 1;          ;;     esac;     wget --progress=dot:giga -O /tmp/openjdk.tar.gz ${BINARY_URL};     wget --progress=dot:giga -O /tmp/openjdk.tar.gz.sig ${BINARY_URL}.sig;     export GNUPGHOME="$(mktemp -d)";     gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B;     gpg --batch --verify /tmp/openjdk.tar.gz.sig /tmp/openjdk.tar.gz;     rm -rf "${GNUPGHOME}" /tmp/openjdk.tar.gz.sig;     echo "${ESUM} */tmp/openjdk.tar.gz" | sha256sum -c -;     mkdir -p "$JAVA_HOME";     tar --extract         --file /tmp/openjdk.tar.gz         --directory "$JAVA_HOME"         --strip-components 1         --no-same-owner     ;     rm -f /tmp/openjdk.tar.gz ${JAVA_HOME}/lib/src.zip;     find "$JAVA_HOME/lib" -name '*.so' -exec dirname '{}' ';' | sort -u > /etc/ld.so.conf.d/docker-openjdk.conf;     ldconfig;     java -Xshare:dump; # buildkit
+      RUN /bin/sh -c set -eux;     apt-get update;     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends         curl         wget         gnupg         fontconfig         ca-certificates p11-kit         binutils         tzdata         locales     ;     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen;     locale-gen en_US.UTF-8;     rm -rf /var/lib/apt/lists/* # buildkit
+  PASS no privileged ports exposed
+  FAIL no setuid/setgid binaries
+      /usr/bin/chage
+      /usr/bin/chfn
+      /usr/bin/chsh
+      /usr/bin/expiry
+      /usr/bin/gpasswd
+      /usr/bin/mount
+      /usr/bin/newgrp
+      /usr/bin/passwd
+      /usr/bin/su
+      /usr/bin/umount
+      /usr/bin/ksu
+      /usr/sbin/pam_extrausers_chkpwd
+      /usr/sbin/unix_chkpwd
+  PASS no world-writable files or non-sticky world-writable dirs
+  PASS /etc/passwd and /etc/group are not writable by the runtime user
+  FAIL Spark distribution and Python packages are read-only for the runtime user
+      /opt/spark
+      /opt/spark/RELEASE
+      /opt/spark/examples
+      /opt/spark/examples/jars
+      /opt/spark/examples/jars/scopt_2.13-3.7.1.jar
+      /opt/spark/examples/jars/spark-examples.jar
+      /opt/spark/examples/jars/spark-examples_2.13-4.2.1.jar
+      /opt/spark/examples/src
+      /opt/spark/examples/src/main
+      /opt/spark/examples/src/main/java
+  FAIL work-dir is writable through group 0 only
+      spark:spark 775 /opt/spark/work-dir
+  PASS no private keys, keystores or credential files
+  PASS no PEM private-key blocks in config, script or Python files
+  FAIL no package manager, compiler or download tool in the runtime image (UBI flavour keeps microdnf/rpm/curl from the base)
+      /usr/bin/gcc
+      /usr/bin/cc
+      /usr/bin/make
+      /usr/bin/pip
+      /usr/bin/pip3
+      /usr/bin/curl
+      /usr/bin/wget
+  PASS no pip / setuptools importable
+  FAIL no leftover build caches
+      hsperfdata_root
+  FAIL does not start under restricted constraints
+      /opt/entrypoint.sh: line 132: exec: spark-submit: not found
+== 7 passed, 9 failed

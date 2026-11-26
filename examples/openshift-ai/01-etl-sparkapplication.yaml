@@ -12,7 +12,7 @@ spec:
   imagePullPolicy: IfNotPresent
   mainApplicationFile: local:///opt/spark/app/etl.py
   arguments: ["--rows", "200000"]
-  sparkVersion: 4.3.0
+  sparkVersion: 4.2.1
   restartPolicy: { type: Never }
   # Pod settings (env, volumes, securityContext) go in driver.template / executor.template.
   # The flat fields (driver.envFrom, spec.volumes, ...) are applied by the operator's pod

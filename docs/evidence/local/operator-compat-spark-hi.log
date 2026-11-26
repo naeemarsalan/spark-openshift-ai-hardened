@@ -1,4 +1,4 @@
   PASS server starts via sbin/start-connect-server.sh (entrypoint bypassed)
-  PASS client: CONNECT_SMOKE_OK server_version=4.3.0
+  PASS client: CONNECT_SMOKE_OK server_version=4.2.1
   PASS preStop hook (sbin/stop-connect-server.sh) runs without filesystem errors
   NOTE operator-style launch does not exit on SIGTERM (killed after grace period) - upstream spark-daemon.sh behaviour

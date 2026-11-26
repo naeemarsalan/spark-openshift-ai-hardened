@@ -6,9 +6,9 @@ kind: SparkConnect
 metadata:
   name: spark-connect
 spec:
-  sparkVersion: 4.3.0
+  sparkVersion: 4.2.1
   sparkConf:
-    # Required with Spark 4.3: the operator sets spark.driver.bindAddress=0.0.0.0 and Spark 4.3
+    # Required with Spark 4.2 and 4.3: the operator sets spark.driver.bindAddress=0.0.0.0 and Spark
     # executors would otherwise dial that as the driver address (0.0.0.0:7078, connection
     # refused, server restart loop). false = use spark.driver.host, which the operator sets
     # to the pod IP.

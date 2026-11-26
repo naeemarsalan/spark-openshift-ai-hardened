@@ -43,7 +43,7 @@ spec:
             - spark.kubernetes.executor.podTemplateFile=/etc/spark/pod-templates/executor.yaml
             - --conf
             - spark.kubernetes.driver.label.spark-job=JOB_NAME_PLACEHOLDER
-            # Spark 4.3 creates a NetworkPolicy per application at submit time. That needs
+            # Spark 4.2 and 4.3 create a NetworkPolicy per application at submit time. That needs
             # networkpolicies write access for this ServiceAccount, which would also let a job
             # rewrite the namespace's other policies. Keep policies admin-owned instead.
             - --conf

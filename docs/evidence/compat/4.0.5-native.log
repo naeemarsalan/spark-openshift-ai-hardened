@@ -1,0 +1,22 @@
+== cluster: https://api.spark.sandbox660.opentlc.com:6443  namespace: spark-native  image: oci.arsalan.io/spark/spark-hi:4.0.5-2
+  PASS spark-submit spark-pi-scala: Pi is roughly 3.141655157082758
+  PASS spark-submit pyspark-smoke: PYSPARK_SMOKE_OK spark=4.0.5 driver_uid=1000830000:0 worker_uid=['1000830000:0']
+  PASS spark-submit s3-jdbc: S3_JDBC_SMOKE_OK
+  PASS Spark Connect server ready
+  PASS connect-client: CONNECT_SMOKE_OK server_version=4.0.5
+  PASS connect-s3-jdbc: S3_JDBC_SMOKE_OK
+== SCC / UID of every Spark pod
+  connect-client                          restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  connect-s3-jdbc                         restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  pyspark-smoke-cfdf38a218671382-driver   restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  pyspark-smoke-m8fwc                     restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  s3-jdbc-a3e285a218677740-driver         restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  s3-jdbc-hshbc                           restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  spark-connect-7db98bf989-kgtt9          restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  spark-connect-exec-1                    restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  spark-connect-exec-2                    restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  spark-pi-scala-488649a21866c050-driver  restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  spark-pi-scala-hxbwq                    restricted-v2  1000830000  oci.arsalan.io/spark/spark-hi:4.0.5-2
+  PASS all 11 Spark pods admitted by restricted-v2
+  PASS all Spark pods run as a namespace-assigned UID
+== 8 passed, 0 failed   (cleanup: tests/cluster-test.sh oci.arsalan.io/spark/spark-hi:4.0.5-2 --cleanup)

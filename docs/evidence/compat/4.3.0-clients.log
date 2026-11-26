@@ -1,0 +1,11 @@
+== server image: oci.arsalan.io/spark/spark-hi:4.3.0-4
+== client image: registry.redhat.io/rhoai/odh-workbench-jupyter-minimal-cpu-py312-rhel9@sha256:97d0a46b51902ce49fbe39ad0d76a7a56f34622c1379037d2546892611319421
+  PASS client=4.0.1 source="workbench default index" PASS server_version=4.3.0 2/2 data paths
+  PASS client=4.1.2 source="workbench default index" PASS server_version=4.3.0 2/2 data paths
+  PASS client=4.2.0 source="workbench default index" PASS server_version=4.3.0 2/2 data paths
+  PASS client=4.0.5 source="PyPI" PASS server_version=4.3.0 2/2 data paths
+  PASS client=4.1.4 source="PyPI" PASS server_version=4.3.0 2/2 data paths
+  PASS client=4.2.1 source="PyPI" PASS server_version=4.3.0 2/2 data paths
+  PASS client=4.3.0 source="PyPI" PASS server_version=4.3.0 2/2 data paths
+  compat-clients  scc=restricted-v2  uid=1000770000
+== 7 passed, 0 failed

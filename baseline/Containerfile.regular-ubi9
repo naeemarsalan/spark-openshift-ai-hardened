@@ -7,7 +7,7 @@
 # with like. See docs/hardening.md for what the hardened build changes and why.
 FROM registry.access.redhat.com/ubi9/ubi:9.9
 
-ARG SPARK_VERSION=4.3.0
+ARG SPARK_VERSION=4.2.1
 ARG DNF_REPO_ARGS=""
 
 RUN dnf ${DNF_REPO_ARGS} install -y java-21-openjdk-headless python3.12 python3.12-pip procps-ng tar gzip && \
@@ -20,8 +20,7 @@ RUN cd /opt/spark/jars && M=https://repo1.maven.org/maven2 && \
     curl -fsSLO $M/org/apache/hadoop/hadoop-aws/3.5.0/hadoop-aws-3.5.0.jar && \
     curl -fsSLO $M/software/amazon/awssdk/bundle/2.59.9/bundle-2.59.9.jar && \
     curl -fsSLO $M/org/postgresql/postgresql/42.7.15/postgresql-42.7.15.jar && \
-    curl -fsSLO $M/com/microsoft/sqlserver/mssql-jdbc/13.6.2.jre11/mssql-jdbc-13.6.2.jre11.jar && \
-    curl -fsSLO $M/com/oracle/database/jdbc/ojdbc17/23.26.4.0.0/ojdbc17-23.26.4.0.0.jar
+    curl -fsSLO $M/com/microsoft/sqlserver/mssql-jdbc/13.6.2.jre11/mssql-jdbc-13.6.2.jre11.jar
 
 RUN python3.12 -m pip install --no-cache-dir numpy "pandas<3" pyarrow grpcio grpcio-status zstandard
 

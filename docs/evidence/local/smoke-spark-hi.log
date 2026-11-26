@@ -1,14 +1,14 @@
-== image: oci.arsalan.io/spark/spark-hi:4.3.0-3   uid: 21183:0
+== image: oci.arsalan.io/spark/spark-hi:4.2.1-2   uid: 33676:0
   PASS default user is non-root 1001:0: 1001:0
-  PASS arbitrary uid has a usable identity: 21183
+  PASS arbitrary uid has a usable identity: 33676
   PASS spark dist is read-only for runtime user: RO_OK
-  PASS spark-submit Scala (SparkPi): Pi is roughly 3.144495572247786
-  PASS spark-submit Python (pandas UDF, Arrow): PYSPARK_SMOKE_OK spark=4.3.0 driver_uid=21183:0 worker_uid=['21183:0']
+  PASS spark-submit Scala (SparkPi): Pi is roughly 3.1404775702387853
+  PASS spark-submit Python (pandas UDF, Arrow): PYSPARK_SMOKE_OK spark=4.2.1 driver_uid=33676:0 worker_uid=['33676:0']
 == waiting for S3, PostgreSQL and Spark Connect
-  PASS Spark Connect server up on :15002: 26/11/25 20:42:15 INFO SparkConnectServer: Spark Connect server started at: [::]:15002
-  PASS Spark Connect Python client: CONNECT_SMOKE_OK server_version=4.3.0
+  PASS Spark Connect server up on :15002: 26/11/26 15:02:06 INFO SparkConnectServer: Spark Connect server started at: [::]:15002
+  PASS Spark Connect Python client: CONNECT_SMOKE_OK server_version=4.2.1
   PASS spark-submit: S3A + JDBC round-trip: S3_JDBC_SMOKE_OK
   PASS Spark Connect: S3A + JDBC round-trip: S3_JDBC_SMOKE_OK
   PASS Connect request logger (SparkConnectExecutionManager) is silenced at INFO
-  PASS no client-supplied credential in the Connect server log (1113 lines)
+  PASS no client-supplied credential in the Connect server log (1093 lines)
 == 11 passed, 0 failed

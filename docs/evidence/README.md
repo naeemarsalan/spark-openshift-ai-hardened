@@ -1,48 +1,74 @@
 # Evidence
 
 > [!NOTE]
-> **In short:** the raw output behind every number in the guide, captured 2026-11-25. Colour
+> **In short:** the raw output behind every number in the guide, captured 2026-11-26. Colour
 > codes are stripped and nothing else is edited. No file contains a credential value (checked
 > against every Secret on the test cluster).
 
 | Folder | Holds |
 |---|---|
-| [`openshift/`](openshift/) | Test runs on the real cluster |
-| [`scans/`](scans/) | Per-CVE lists for the four scanned images |
+| [`openshift/`](openshift/) | Spark 4.2.1 on the real cluster: both bases, plus the Docker Hub image |
+| [`compat/`](compat/) | Spark 4.0.5, 4.1.4 and 4.3.0 on the same cluster and on the build machine |
+| [`scans/`](scans/) | Per-CVE lists for every scanned image |
 | [`image-checks/`](image-checks/) | Output of the 16 hardening checks |
-| [`local/`](local/) | Test runs on the build machine |
+| [`local/`](local/) | Spark 4.2.1 test runs on the build machine |
 
-## `openshift/` — OpenShift 4.20.27, OpenShift AI 3.5.4
+## `openshift/` — OpenShift 4.20.27, OpenShift AI 3.5.4, Spark 4.2.1
+
+`<base>` is `hi` (hardened image) or `ubi9`.
 
 | File | What it is |
 |---|---|
-| `00-cluster.txt` | Versions, nodes, namespace UID range, SCC and security context of every Spark pod, capabilities inside a running pod, operator webhook scope |
-| `01-operator-spark-hi-first-run-1-failure.log` | First operator run: 8 passed, 1 failed (pod settings ignored outside `default`; see [openshift-ai.md](../openshift-ai.md#1-pod-settings-must-go-in-pod-templates)) |
-| `02-operator-spark-hi.log` | Operator test, hardened image: 9 / 9 |
-| `03-examples-spark-hi.log` | Example pipeline, hardened image: 5 / 5 |
-| `04-security-spark-hi.log` | Cluster security test, hardened image: 10 / 10 |
-| `05-operator-spark-ubi9.log` | Operator test, UBI 9 image: 9 / 9 |
-| `06-security-spark-ubi9.log` | Cluster security test, UBI 9 image: 10 / 10 |
-| `07-examples-spark-ubi9-server.log` | Example pipeline with the UBI 9 Spark Connect server: 5 / 5 |
-| `08-workbench-client-4.3.0-pypi.log` | Notebook cells run in a real workbench, client 4.3.0 from PyPI |
-| `09-workbench-client-4.2.0-redhat-index.log` | The same with client 4.2.0 from Red Hat's index |
-| `10-workbench-executed.ipynb` | The notebook as executed in the workbench, with outputs |
-| `11-spark-submit-no-operator-spark-hi.log` | `spark-submit` without the operator: 8 / 8 |
+| `4.2.1-<base>-operator.log` | `SparkApplication` and `SparkConnect` through the operator: 9 / 9 |
+| `4.2.1-<base>-examples.log` | Example pipeline: 5 / 5 |
+| `4.2.1-<base>-security.log` | NetworkPolicy, RBAC and credential checks: 10 / 10 |
+| `4.2.1-<base>-native.log` | `spark-submit` without the operator: 8 / 8 |
+| `4.2.1-<base>-clients.log` | Seven `pyspark-client` versions against the server: 7 / 7 |
+| `4.2.1-<base>-workbench.log` | The notebook executed inside a real workbench pod, with cell outputs |
+| `dockerhub-4.2.1-operator.log` | The unmodified Docker Hub image through the operator: 5 / 9 |
+| `preflight-spark-hi-4.2.1.log` | `hack/preflight.sh` on the hardened image: 0 failed |
+| `preflight-dockerhub-4.2.1.log` | `hack/preflight.sh` on the Docker Hub image: 1 failed |
+| `00-cluster-2026-11-25.txt` | Versions, nodes, namespace UID range, security context of every Spark pod, operator webhook scope. Captured during the first round of testing, with Spark 4.3.0 images |
+| `first-run-4.3.0-operator-1-failure.log` | The first ever operator run: 8 passed, 1 failed (pod settings ignored outside `default`; see [openshift-ai.md](../openshift-ai.md#1-pod-settings-must-go-in-pod-templates)) |
+
+## `compat/` — other Spark versions, hardened image
+
+`<version>` is `4.0.5`, `4.1.4` or `4.3.0`. The matrix that links to these is
+[compatibility.md](../compatibility.md).
+
+| File | What it is |
+|---|---|
+| `<version>-operator.log` | Operator test on the cluster |
+| `<version>-native.log` | `spark-submit` without the operator, on the cluster |
+| `<version>-clients.log` | Seven `pyspark-client` versions against that server |
+| `<version>-local-smoke.log` | Functional tests on the build machine |
+| `<version>-local-operator-launch.log` | Emulation of the operator's Spark Connect launch |
+
+The 4.1.4 operator and client tests were run a second time. The first attempt started before
+the image had been pushed to the registry, so its pods could not pull it. The logs here are
+from the second run.
 
 ## `scans/` — Trivy 0.76.2 and Grype 0.122.1
 
-Full per-CVE lists for the four images in [scan-comparison.md](../scan-comparison.md):
-`A-apache-spark.md`, `B-regular-ubi9.md`, `C-spark-ubi9.md`, `D-spark-hi.md`.
+| File | Image |
+|---|---|
+| `A-dockerhub-apache-spark-4.2.1.md` | `docker.io/apache/spark:4.2.1` |
+| `B-regular-ubi9-4.2.1.md` | The regular UBI 9 build |
+| `C-spark-ubi9-4.2.1.md` | This repo, UBI 9 minimal |
+| `D-spark-hi-4.2.1.md` | This repo, hardened base |
+| `compat-spark-hi-<version>.md` | The hardened image for 4.0.5, 4.1.4 and 4.3.0 |
 
 ## `image-checks/` — `hack/verify-image.sh`
 
 | File | Result |
 |---|---|
-| `verify-spark-regular-ubi9.txt` | 9 passed, 7 failed |
-| `verify-spark-ubi9.txt` | 16 passed, 0 failed |
-| `verify-spark-hi.txt` | 16 passed, 0 failed |
+| `verify-dockerhub-apache-spark-4.2.1.txt` | 7 passed, 9 failed |
+| `verify-spark-regular-ubi9-4.2.1.txt` | 9 passed, 7 failed |
+| `verify-spark-ubi9-4.2.1.txt` | 16 passed, 0 failed |
+| `verify-spark-hi-4.2.1.txt` | 16 passed, 0 failed |
+| `verify-spark-hi-4.0.5.txt`, `-4.1.4.txt`, `-4.3.0.txt` | 16 passed, 0 failed each |
 
-## `local/` — build machine, podman
+## `local/` — build machine, podman, Spark 4.2.1
 
 Every container runs as a random UID in group 0, with all capabilities dropped, no privilege
 escalation and a read-only root filesystem.
@@ -52,5 +78,5 @@ escalation and a read-only root filesystem.
 | `smoke-spark-hi.log`, `smoke-spark-ubi9.log` | Functional tests: 11 / 11 each |
 | `operator-compat-spark-hi.log` | Emulation of the operator's Spark Connect launch: 3 / 3 |
 | `security-local-spark-hi.log` | Spark Connect token and TLS, secrets hygiene: 8 / 8 |
-| `jdbc-drivers-spark-hi.log` | Round-trips against PostgreSQL 16, SQL Server 2022 and Oracle 23ai Free: 3 / 3 |
+| `jdbc-drivers-spark-hi.log` | Round-trips against PostgreSQL 16 and SQL Server 2022: 2 / 2 |
 | `examples-local.log` | The three example projects: 3 / 3 |

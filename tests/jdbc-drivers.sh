@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 # Prove each bundled JDBC driver against a REAL database engine (podman, Spark local mode).
-# PostgreSQL is already covered by smoke-local.sh; this adds SQL Server and Oracle.
+# PostgreSQL is already covered by smoke-local.sh; this adds SQL Server, and Oracle when the
+# image was built with the optional Oracle driver (see image/jars.txt).
 #
 # Licences: starting these containers accepts the vendors' terms for development/test use
 # (SQL Server Developer edition EULA; Oracle Database Free terms).
 #
-# Usage: tests/jdbc-drivers.sh <image> [mssql|oracle|postgres ...]   (default: all three)
+# Usage: tests/jdbc-drivers.sh <image> [mssql|oracle|postgres ...]
+#   default: postgres and mssql, plus oracle if the image contains an ojdbc jar
 set -euo pipefail
 IMAGE="${1:?usage: jdbc-drivers.sh <image> [mssql|oracle|postgres ...]}"; shift
-DBS=("$@"); [[ ${#DBS[@]} -eq 0 ]] && DBS=(postgres mssql oracle)
 ENGINE="${ENGINE:-podman}"
+DBS=("$@")
+if [[ ${#DBS[@]} -eq 0 ]]; then
+  DBS=(postgres mssql)
+  if "$ENGINE" run --rm --entrypoint bash "$IMAGE" -c 'ls /opt/spark/jars/ojdbc*.jar' >/dev/null 2>&1; then DBS+=(oracle)
+  else echo "   note: no Oracle driver in this image (opt-in, see image/jars.txt) - Oracle round-trip skipped"; fi
+fi
 cd "$(dirname "$0")/.."
 RAND_UID=$(( 20000 + RANDOM )); pass=0; failn=0
 SEC=(--user "$RAND_UID:0" --cap-drop=ALL --security-opt=no-new-privileges --read-only --tmpfs /tmp:rw,mode=1777 -v "$PWD/tests/jobs:/jobs:ro,z")

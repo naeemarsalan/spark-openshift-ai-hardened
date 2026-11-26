@@ -1,0 +1,52 @@
+== localhost/spark-regular-ubi9:4.2.1
+  PASS USER is numeric and non-root (185)
+  FAIL USER should be <uid>:0
+  PASS no credential-looking ENV vars
+  FAIL build history
+      |4 DNF_REPO_ARGS=--disablerepo=* --enablerepo=ubi-9-baseos-rpms --enablerepo=ubi-9-appstream-rpms SPARK_VERSION=4.2.1 /bin/sh -c cd /opt/spark/jars && M=https://repo1.maven.org/maven2 &&     curl -fsSLO $M/org/apache/hadoop/hadoop-aws/3.5.0/hadoop-aws-3.5.0.jar &&     curl -fsSLO $M/software/amazon/awssdk/bundle/2.59.9/bundle-2.59.9.jar &&     curl -fsSLO $M/org/postgresql/postgresql/42.7.15/postgresql-42.7.15.jar &&     curl -fsSLO $M/com/microsoft/sqlserver/mssql-jdbc/13.6.2.jre11/mssql-jdbc-13.6.2.jre11.jar
+      |4 DNF_REPO_ARGS=--disablerepo=* --enablerepo=ubi-9-baseos-rpms --enablerepo=ubi-9-appstream-rpms SPARK_VERSION=4.2.1 /bin/sh -c curl -fsSL https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz       | tar -xz -C /opt && mv /opt/spark-${SPARK_VERSION}-bin-hadoop3 /opt/spark
+  PASS no privileged ports exposed
+  FAIL no setuid/setgid binaries
+      /usr/bin/chage
+      /usr/bin/gpasswd
+      /usr/bin/mount
+      /usr/bin/newgrp
+      /usr/bin/passwd
+      /usr/bin/su
+      /usr/bin/umount
+      /usr/bin/write
+      /usr/libexec/utempter/utempter
+      /usr/sbin/pam_timestamp_check
+      /usr/sbin/unix_chkpwd
+      /usr/sbin/userhelper
+  PASS no world-writable files or non-sticky world-writable dirs
+  PASS /etc/passwd and /etc/group are not writable by the runtime user
+  FAIL Spark distribution and Python packages are read-only for the runtime user
+      /opt/spark
+      /opt/spark/LICENSE
+      /opt/spark/NOTICE
+      /opt/spark/R
+      /opt/spark/R/lib
+      /opt/spark/R/lib/SparkR
+      /opt/spark/R/lib/SparkR/DESCRIPTION
+      /opt/spark/R/lib/SparkR/INDEX
+      /opt/spark/R/lib/SparkR/LICENSE
+      /opt/spark/R/lib/SparkR/Meta
+  FAIL work-dir is writable through group 0 only
+      spark:root 700 /opt/spark/work-dir
+  PASS no private keys, keystores or credential files
+  PASS no PEM private-key blocks in config, script or Python files
+  PASS no package manager, compiler or download tool in the runtime image (UBI flavour keeps microdnf/rpm/curl from the base)
+  FAIL no pip / setuptools importable
+      pip
+      setuptools
+  FAIL no leftover build caches
+      .gpgkeyschecked.yum
+      clean_command.lock
+      expired_repos.json
+      packages.db
+      tempfiles.json
+      ubi-9-appstream-rpms-b5efbddad0d332c6
+      ubi-9-baseos-rpms-716755c064625c80
+  PASS starts as arbitrary UID, no capabilities, no-new-privileges, read-only rootfs
+== 9 passed, 7 failed

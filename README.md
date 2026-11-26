@@ -1,22 +1,22 @@
-# Hardened Apache Spark images for OpenShift AI
+# Apache Spark on OpenShift AI: bring your own hardened image
 
-Build a custom Apache Spark image that survives a security review and runs on OpenShift AI
-under the default `restricted-v2` SCC. Every claim on this page links to the output that
-proves it.
+How to run Apache Spark with Red Hat OpenShift AI: what the platform gives you, what you have
+to bring, and how to build the one thing it does not ship, a Spark image. Everything here was
+run on a real cluster, and every number links to the output behind it.
 
 > [!NOTE]
-> **The 30-second version**
+> **In short**
 >
+> - **OpenShift AI gives you the Spark Operator and workbenches. You bring the Spark image.**
 > - **One image, every role:** `spark-submit` driver, Scala and Python executors, Spark Connect server.
-> - **Two bases to choose from:** Red Hat Hardened Images (default) or UBI 9 minimal.
-> - **Hardening is checked, not assumed:** 16 automated checks. A regular UBI build passes 9.
-> - **Scan findings drop from 790 to 114** (hardened base) compared with a regular UBI build.
-> - **It runs with no SCC granted:** tested on OpenShift 4.20 with OpenShift AI 3.5.4.
-> - **"Zero vulnerabilities" is not reached.** What is left has no fixed version yet. [Details](docs/scan-comparison.md#what-is-still-open).
+> - **Three starting points compared:** Red Hat Hardened Images (default), UBI 9 minimal, and the Docker Hub image.
+> - **Safer by default:** 793 scan findings in a regular UBI build, 434 on UBI 9 minimal, **92** on the hardened base.
+> - **No SCC needed:** every pod runs under the default `restricted-v2`.
+> - **Four Spark versions tested** against OpenShift AI 3.5.4: 4.0.5, 4.1.4, 4.2.1 (default) and 4.3.0.
 
 ## Contents
 
-- [Pick your path](#pick-your-path)
+- [Start here](#start-here)
 - [What is in the image](#what-is-in-the-image)
 - [Architecture](#architecture)
 - [Requirements](#requirements)
@@ -25,19 +25,21 @@ proves it.
 - [Results](#results)
 - [Requirement checklist](#requirement-checklist)
 - [Repository layout](#repository-layout)
-- [Open decisions](#open-decisions)
+- [Choices made in this repo](#choices-made-in-this-repo)
 - [Not covered](#not-covered)
 - [Additional resources](#additional-resources)
 
-## Pick your path
+## Start here
 
 | I want to... | Go to |
 |---|---|
+| Understand what OpenShift AI provides and what I must bring | [docs/spark-on-openshift-ai.md](docs/spark-on-openshift-ai.md) |
+| Bring my own image: hardened, UBI 9 or Docker Hub? | [docs/bring-your-own-image.md](docs/bring-your-own-image.md) |
+| Know which Spark and client versions work together | [docs/compatibility.md](docs/compatibility.md) |
 | Build it and see it work | [Quick start](#quick-start-build-and-check) below |
 | Follow every step with expected output | [docs/walkthrough.md](docs/walkthrough.md) |
 | Know what the hardening changed | [docs/hardening.md](docs/hardening.md) |
 | See scan numbers before and after | [docs/scan-comparison.md](docs/scan-comparison.md) |
-| Choose between the hardened base and UBI 9 | [docs/choosing-a-base.md](docs/choosing-a-base.md) |
 | Run it on OpenShift AI, or fix a job that fails there | [docs/openshift-ai.md](docs/openshift-ai.md) |
 | Check the raw output behind a number | [docs/evidence/](docs/evidence/) |
 
@@ -45,10 +47,10 @@ proves it.
 
 | | |
 |---|---|
-| Spark | 4.3.0 (Scala 2.13), Spark Connect included |
+| Spark | 4.2.1 (Scala 2.13), Spark Connect included. [Other tested versions](docs/compatibility.md) |
 | Java / Python | OpenJDK 21 headless / Python 3.12 with numpy, pandas, pyarrow, grpcio |
 | Storage | S3 through `hadoop-aws` 3.5.0 and the AWS SDK v2 |
-| Databases | PostgreSQL, SQL Server and Oracle JDBC drivers |
+| Databases | PostgreSQL and SQL Server JDBC drivers. Oracle is [one line to add](docs/bring-your-own-image.md#make-it-yours) |
 | Base | Red Hat Hardened Images (`spark-hi`) or UBI 9 minimal (`spark-ubi9`) |
 | Default user | `1001:0`, and works as any UID in group 0 |
 
@@ -167,19 +169,25 @@ image and runs the same checks and scans against both.
    make push
    ```
 
-3. Run the three cluster tests.
+3. Check that the cluster, the project and the image are ready.
 
    ```bash
-   IMG=<registry>/spark-hi:4.3.0-3
+   IMG=<registry>/spark-hi:4.2.1-2
 
+   hack/preflight.sh "$IMG"
+   ```
+
+4. Run the three cluster tests.
+
+   ```bash
    tests/cluster-test-openshift-ai.sh "$IMG"
-   examples/run-cluster.sh "$IMG" <registry>/spark-examples:4.3.0-3
+   examples/run-cluster.sh "$IMG" <registry>/spark-examples:4.2.1-2
    tests/security-cluster.sh "$IMG"
    ```
 
 **Verification**
 
-Each script ends with a count and lists the SCC and UID of every Spark pod:
+`hack/preflight.sh` ends with `0 failed`. Each test script ends with a count and lists the SCC and UID of every Spark pod:
 
 ```
   PASS all 6 Spark pods admitted by restricted-v2
@@ -199,35 +207,52 @@ Private registry, workbench setup and troubleshooting: [docs/openshift-ai.md](do
 
 ### Before and after
 
-The same Spark, built the regular UBI way and built by this repo.
+The same Spark 4.2.1 from four sources. Scanned 2026-11-26.
 [Full comparison](docs/scan-comparison.md).
 
-| | Regular UBI 9 build | This repo, UBI 9 minimal | This repo, hardened base |
-|---|---|---|---|
-| Grype findings | 793 | 434 | **114** |
-| Trivy findings | 790 | 425 | 55 ¹ |
-| Critical (Trivy) | 4 | 0 | 0 |
-| Java-library findings (Trivy) | 187 | 55 | 55 |
-| OS packages installed | 213 | 139 | 78 |
-| Hardening checks passed | 9 / 16 | 16 / 16 | 16 / 16 |
-| Downloads software during the build | yes | no | no |
-| Ships `pip` and build caches | yes | no | no |
-| Runtime user can modify Spark's jars | yes | no | no |
+| | Docker Hub `apache/spark` | Regular UBI 9 build | This repo, UBI 9 minimal | This repo, hardened base |
+|---|---|---|---|---|
+| Grype findings | 1,279 | 793 | 434 | **92** |
+| Trivy findings | 3,419 | 790 | 425 | 55 ¹ |
+| Critical (Trivy) | 33 | 4 | 0 | 0 |
+| Java-library findings (Trivy) | 140 | 187 | 55 | 55 |
+| OS packages installed | 265 | 213 | 139 | 78 |
+| Hardening checks passed | 7 / 16 | 9 / 16 | 16 / 16 | 16 / 16 |
+| S3 and JDBC libraries included | no | yes | yes | yes |
+| Downloads software during the build | not applicable | yes | no | no |
+| Runtime user can modify Spark's jars | yes | yes | no | no |
 
 ¹ Trivy does not recognise the hardened base's operating system and skips its packages. That
 number is Java libraries only. Use the Grype row to compare.
 
+The findings that remain have no drop-in fix today. The goal here is an image that is **safer
+by default**, not a scanner report that reads zero.
+[What is left and why](docs/scan-comparison.md#what-is-left).
+
 ### Tests on OpenShift AI
 
-OpenShift 4.20.27, OpenShift AI 3.5.4, 2026-11-25. [Details](docs/openshift-ai.md).
+OpenShift 4.20.27, OpenShift AI 3.5.4, Spark 4.2.1, 2026-11-26. [Details](docs/openshift-ai.md).
 
 | Test | `spark-hi` | `spark-ubi9` |
 |---|---|---|
-| Operator: `SparkApplication` and `SparkConnect` | ✅ 9 / 9 | ✅ 9 / 9 |
-| Example pipeline through the operator | ✅ 5 / 5 | ✅ 5 / 5 |
-| Cluster security: NetworkPolicy, RBAC, credentials | ✅ 10 / 10 | ✅ 10 / 10 |
-| `spark-submit` without the operator | ✅ 8 / 8 | not run |
-| Notebook in a real workbench | not run | ✅ pass |
+| Operator: `SparkApplication` and `SparkConnect` | ✅ [9 / 9](docs/evidence/openshift/4.2.1-hi-operator.log) | ✅ [9 / 9](docs/evidence/openshift/4.2.1-ubi9-operator.log) |
+| Example pipeline through the operator | ✅ [5 / 5](docs/evidence/openshift/4.2.1-hi-examples.log) | ✅ [5 / 5](docs/evidence/openshift/4.2.1-ubi9-examples.log) |
+| Cluster security: NetworkPolicy, RBAC, credentials | ✅ [10 / 10](docs/evidence/openshift/4.2.1-hi-security.log) | ✅ [10 / 10](docs/evidence/openshift/4.2.1-ubi9-security.log) |
+| `spark-submit` without the operator | ✅ [8 / 8](docs/evidence/openshift/4.2.1-hi-native.log) | ✅ [8 / 8](docs/evidence/openshift/4.2.1-ubi9-native.log) |
+| Notebook clients, 7 versions | ✅ [7 / 7](docs/evidence/openshift/4.2.1-hi-clients.log) | ✅ [7 / 7](docs/evidence/openshift/4.2.1-ubi9-clients.log) |
+| Notebook in a real workbench | ✅ [1 / 1](docs/evidence/openshift/4.2.1-hi-workbench.log) | ✅ [1 / 1](docs/evidence/openshift/4.2.1-ubi9-workbench.log) |
+
+### Spark versions tested
+
+Hardened image, same cluster. Every cell links to its log in
+[docs/compatibility.md](docs/compatibility.md).
+
+| Spark | Operator | `spark-submit` without the operator | Notebook clients passing |
+|---|---|---|---|
+| 4.0.5 | ✅ 9 / 9 | ✅ 8 / 8 | ✅ 7 / 7 |
+| 4.1.4 | ✅ 9 / 9 | ✅ 8 / 8 | ✅ 7 / 7 |
+| **4.2.1** (default) | ✅ 9 / 9 | ✅ 8 / 8 | ✅ 7 / 7 |
+| 4.3.0 | ✅ 9 / 9 | ✅ 8 / 8 | ✅ 7 / 7 |
 
 ## Requirement checklist
 
@@ -235,13 +260,13 @@ OpenShift 4.20.27, OpenShift AI 3.5.4, 2026-11-25. [Details](docs/openshift-ai.m
 |---|---|---|---|
 | ✅ | Spark Connect and `spark-submit` | [`image/entrypoint.sh`](image/entrypoint.sh) modes `driver`, `executor`, `connect` | Operator test 9 / 9 |
 | ✅ | Scala and Python executors | One image with the JVM, Python 3.12 and the Arrow stack | Scala SparkPi and a PySpark pandas UDF on the cluster |
-| ✅ | S3 and database libraries | [`image/jars.txt`](image/jars.txt) | S3 and JDBC round-trips; three real database engines locally |
+| ✅ | S3 and database libraries | [`image/jars.txt`](image/jars.txt) | S3 and JDBC round-trips on the cluster; PostgreSQL and SQL Server engines locally |
 | ✅ | No secrets in the image | Nothing in git, `ENV` or layers. Credentials come from Secrets at run time | `verify-image.sh`; Trivy secret scan: 0; no credential in any spec or log |
 | ✅ | Non-root default user | `USER 1001:0` | Ran as UID `1000770000` on the cluster |
 | ✅ | No downloads during the build | Build copies from `./artifacts`, checked against [`artifacts.sha256`](artifacts.sha256) | `verify-image.sh` build-history check |
-| ✅ | No end-of-life software | Spark 4.3.0, OpenJDK 21, Python 3.12; ten bundled library families replaced | [`image/jars.txt`](image/jars.txt), scan reports |
+| ✅ | No end-of-life software | Spark 4.2.1, OpenJDK 21, Python 3.12; ten bundled library families replaced | [`image/jars.txt`](image/jars.txt), scan reports |
 | ✅ | `restricted-v2` compatible | No fixed UID, all capabilities dropped, no privilege escalation, `RuntimeDefault` seccomp | Every Spark pod admitted by `restricted-v2`, no SCC granted |
-| ❌ | Zero vulnerabilities | **Not met.** 55 Java-library findings plus OS findings, none with a fix available | [docs/scan-comparison.md](docs/scan-comparison.md#what-is-still-open) |
+| ✅ | Security scanning | Trivy and Grype on every build, compared with a regular build and the Docker Hub image | [docs/scan-comparison.md](docs/scan-comparison.md) |
 
 ## Repository layout
 
@@ -252,7 +277,8 @@ Containerfile           hardened-image flavour (FROM scratch + minimal RPM root 
 Containerfile.ubi9      UBI 9 minimal flavour
 baseline/               the regular UBI build, for comparison only
 image/                  what goes in the image: assemble script, jar lists, entrypoint, defaults
-hack/                   fetch-artifacts.sh, verify-image.sh, scan.sh
+compat/                 version profiles for Spark 4.0, 4.1 and 4.3
+hack/                   fetch-artifacts.sh, verify-image.sh, scan.sh, preflight.sh, compat-build.sh
 tests/                  local and cluster tests
 deploy/openshift-ai/    SparkApplication, SparkConnect, RBAC and NetworkPolicy for OpenShift AI
 deploy/                 the same without the operator (plain spark-submit)
@@ -260,25 +286,27 @@ examples/               three example projects and their manifests
 docs/                   the guide and the evidence
 ```
 
-## Open decisions
+## Choices made in this repo
 
-These need an owner. None can be settled inside the image build.
+Change any of them for your own build.
 
-| # | Decision | Options |
+| Choice | What this repo does | To change it |
 |---|---|---|
-| 1 | Shaded-library findings (51) | Rebuild Spark and the Hadoop client from source, re-shade the jars, or record VEX justifications |
-| 2 | Hive 2.3 jars (4 findings) | Remove them and lose Hive Metastore support, or keep them |
-| 3 | Which base to lead with | Depends on whether your scanner recognises the hardened images. [Guide](docs/choosing-a-base.md) |
-| 4 | Spark version | 4.3.0 is tested here. OpenShift AI 3.5 ships 4.0.1 in the operator and clients up to 4.2.0 |
-| 5 | Oracle JDBC driver licence | Confirm it may be redistributed inside the image |
+| Spark version | 4.2.1. It matches the newest client in OpenShift AI 3.5's package index (4.2.0) and has upstream's longer maintenance window | [docs/compatibility.md](docs/compatibility.md) |
+| Base image | Red Hat Hardened Images by default, UBI 9 minimal as the alternative | `make build FLAVOR=ubi9` |
+| Findings with no fixed release | Left as they are, listed and explained | [docs/scan-comparison.md](docs/scan-comparison.md#what-is-left) |
+| Hive 2.3 support jars | Kept, so `enableHiveSupport()` and Hive Metastore work | Add them to [`image/jars-remove.txt`](image/jars-remove.txt) |
+| Oracle JDBC driver | Not included. Check Oracle's licence before you add it | Uncomment one line in [`image/jars.txt`](image/jars.txt) |
 
 ## Not covered
 
-- Red Hat's published Spark Operator documentation was not read directly. The manifests follow
-  the examples in Red Hat's operator source repository.
+- Which Spark versions Red Hat **supports**. This repo reports what was tested. Check Red
+  Hat's supported-configurations page for your OpenShift AI version.
 - The Spark Operator's support status in OpenShift AI 3.5 (generally available or Technology
   Preview) is unconfirmed.
-- Disconnected clusters, FIPS mode, and architectures other than x86_64.
+- Red Hat's published Spark Operator documentation was not read directly. The manifests follow
+  the examples in Red Hat's operator source repository.
+- Spark 3.5, disconnected clusters, FIPS mode, and architectures other than x86_64.
 - Support and licensing terms of Red Hat Hardened Images.
 
 ## Additional resources

@@ -1,0 +1,10 @@
+# Compatibility profile for Spark 4.1: prune only, no library replacement.
+
+# Spark Connect JVM client REPL. The server, spark-submit and executors do not use it.
+connect-repl
+
+# Native libraries for platforms this image does not target (x86_64 Linux only).
+netty-*-linux-aarch_64.jar
+netty-*-linux-riscv64.jar
+netty-*-osx-*.jar
+netty-*-windows-*.jar

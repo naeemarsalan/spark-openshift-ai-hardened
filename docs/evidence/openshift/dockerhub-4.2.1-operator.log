@@ -1,0 +1,72 @@
+== cluster: https://api.spark.sandbox660.opentlc.com:6443  namespace: spark-demo  image: docker.io/apache/spark:4.2.1
+  PASS CRD sparkapplications.sparkoperator.k8s.io present
+  PASS CRD sparkconnects.sparkoperator.k8s.io present
+  info: RHOAI 3.5.4  spark operator: Managed
+  FAIL SparkApplication spark-pi-scala (state=FAILED)
+      ---
+      WARNING: Using incubator modules: jdk.incubator.vector
+      Files local:///opt/spark/examples/jars/spark-examples.jar from /opt/spark/examples/jars/spark-examples_2.13-4.2.1.jar to /opt/spark/work-dir/spark-examples_2.13-4.2.1.jar
+      Exception in thread "main" java.nio.file.AccessDeniedException: /opt/spark/work-dir/spark-examples_2.13-4.2.1.jar
+      	at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:90)
+      	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:106)
+      	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+      	at java.base/sun.nio.fs.UnixFileSystem.copyFile(UnixFileSystem.java:673)
+      	at java.base/sun.nio.fs.UnixFileSystem.copy(UnixFileSystem.java:1084)
+      	at java.base/sun.nio.fs.UnixFileSystemProvider.copy(UnixFileSystemProvider.java:300)
+      	at java.base/java.nio.file.Files.copy(Files.java:1305)
+      	at org.apache.spark.deploy.SparkSubmit.$anonfun$prepareSubmitEnvironment$16(SparkSubmit.scala:458)
+      	at scala.collection.immutable.ArraySeq.map(ArraySeq.scala:75)
+      	at scala.collection.immutable.ArraySeq.map(ArraySeq.scala:35)
+      	at org.apache.spark.deploy.SparkSubmit.downloadResourcesToCurrentDirectory$1(SparkSubmit.scala:443)
+      	at org.apache.spark.deploy.SparkSubmit.$anonfun$prepareSubmitEnvironment$21(SparkSubmit.scala:476)
+      	at scala.Option.map(Option.scala:242)
+      	at org.apache.spark.deploy.SparkSubmit.prepareSubmitEnvironment(SparkSubmit.scala:476)
+      	at org.apache.spark.deploy.SparkSubmit.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:965)
+      	at org.apache.spark.deploy.SparkSubmit.doRunMain$1(SparkSubmit.scala:203)
+      	at org.apache.spark.deploy.SparkSubmit.submit(SparkSubmit.scala:226)
+      	at org.apache.spark.deploy.SparkSubmit.doSubmit(SparkSubmit.scala:95)
+      	at org.apache.spark.deploy.SparkSubmit$$anon$2.doSubmit(SparkSubmit.scala:1171)
+      	at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:1180)
+      	at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)
+  FAIL SparkApplication s3-jdbc-python (state=FAILED)
+      	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+      	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+      	at py4j.Gateway.invoke(Gateway.java:282)
+      	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+      	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+      	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:184)
+      	at py4j.ClientServerConnection.run(ClientServerConnection.java:108)
+      	at java.base/java.lang.Thread.run(Thread.java:1583)
+      Caused by: java.lang.ClassNotFoundException: Class org.apache.hadoop.fs.s3a.S3AFileSystem not found
+      	at org.apache.hadoop.conf.Configuration.getClassByName(Configuration.java:2628)
+      	at org.apache.hadoop.conf.Configuration.getClass(Configuration.java:2722)
+      	... 23 more
+      
+      26/11/26 16:15:47 INFO SparkContext: SparkContext is stopping with exitCode 1 from stop at SparkSubmit.scala:1053.
+      26/11/26 16:15:47 INFO SparkUI: Stopped Spark web UI at http://s3-jdbc-python-de4a0aa218a3e87f-driver-svc.spark-demo.svc:4040
+      26/11/26 16:15:47 INFO KubernetesClusterSchedulerBackend: Shutting down all executors
+      26/11/26 16:15:47 INFO KubernetesClusterSchedulerBackend$KubernetesDriverEndpoint: Asking each executor to shut down
+      26/11/26 16:15:47 INFO ExecutorPodsWatchSnapshotSource: Kubernetes client has been closed.
+      26/11/26 16:15:47 INFO MapOutputTrackerMasterEndpoint: MapOutputTrackerMasterEndpoint stopped!
+      26/11/26 16:15:47 INFO MemoryStore: MemoryStore started with capacity 413.9 MiB
+      26/11/26 16:15:47 INFO MemoryStore: MemoryStore cleared
+      26/11/26 16:15:47 INFO BlockManager: BlockManager stopped
+      26/11/26 16:15:47 INFO BlockManagerMaster: BlockManagerMaster stopped
+      26/11/26 16:15:47 INFO OutputCommitCoordinator$OutputCommitCoordinatorEndpoint: OutputCommitCoordinator stopped!
+      26/11/26 16:15:47 INFO SparkContext: Successfully stopped SparkContext (Uptime: 14586 ms)
+  PASS SparkConnect server pod ready
+  FAIL Connect client
+      bash: line 1: python3.12: command not found
+  FAIL Connect client S3A + JDBC
+      bash: line 1: python3.12: command not found
+== SCC / UID of every Spark pod
+  oai-connect-client     restricted-v2  1000770000  docker.io/apache/spark:4.2.1
+  s3-jdbc-python-driver  restricted-v2  1000770000  docker.io/apache/spark:4.2.1
+  spark-connect-exec-1   restricted-v2  1000770000  docker.io/apache/spark:4.2.1
+  spark-connect-exec-2   restricted-v2  1000770000  docker.io/apache/spark:4.2.1
+  spark-connect-server   restricted-v2  1000770000  docker.io/apache/spark:4.2.1
+  spark-pi-scala-driver  restricted-v2  1000770000  docker.io/apache/spark:4.2.1
+  PASS all 6 Spark pods admitted by restricted-v2
+  PASS all Spark pods run as a namespace-assigned UID
+== 5 passed, 4 failed
+   manual step: workbench test in deploy/openshift-ai/workbench-notebook.md

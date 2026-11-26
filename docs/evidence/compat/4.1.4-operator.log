@@ -1,0 +1,20 @@
+== cluster: https://api.spark.sandbox660.opentlc.com:6443  namespace: spark-demo  image: oci.arsalan.io/spark/spark-hi:4.1.4-2
+  PASS CRD sparkapplications.sparkoperator.k8s.io present
+  PASS CRD sparkconnects.sparkoperator.k8s.io present
+  info: RHOAI 3.5.4  spark operator: Managed
+  PASS SparkApplication spark-pi-scala: Pi is roughly 3.1417921570896077
+  PASS SparkApplication s3-jdbc-python: S3_JDBC_SMOKE_OK
+  PASS SparkConnect server pod ready
+  PASS Connect client: CONNECT_SMOKE_OK server_version=4.1.4
+  PASS Connect client: S3A + JDBC round-trip
+== SCC / UID of every Spark pod
+  oai-connect-client     restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.1.4-2
+  s3-jdbc-python-driver  restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.1.4-2
+  spark-connect-exec-1   restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.1.4-2
+  spark-connect-exec-2   restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.1.4-2
+  spark-connect-server   restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.1.4-2
+  spark-pi-scala-driver  restricted-v2  1000770000  oci.arsalan.io/spark/spark-hi:4.1.4-2
+  PASS all 6 Spark pods admitted by restricted-v2
+  PASS all Spark pods run as a namespace-assigned UID
+== 9 passed, 0 failed
+   manual step: workbench test in deploy/openshift-ai/workbench-notebook.md

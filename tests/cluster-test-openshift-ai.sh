@@ -17,7 +17,8 @@ NS="$(oc config view --minify -o jsonpath='{..namespace}')"; D=deploy/openshift-
 pass=0; failn=0
 ok()  { printf '  \033[1;32mPASS\033[0m %s\n' "$1"; pass=$((pass+1)); }
 bad() { printf '  \033[1;31mFAIL\033[0m %s\n' "$1"; [[ -n "${2:-}" ]] && sed 's/^/      /' <<<"$2" | tail -n 25; failn=$((failn+1)); }
-apply() { sed "s#SPARK_IMAGE_PLACEHOLDER#$IMAGE#g" "$1" | oc apply -f - >/dev/null; }
+# SPARK_VERSION_OVERRIDE: set when testing an image built from a compat/ profile.
+apply() { sed -e "s#SPARK_IMAGE_PLACEHOLDER#$IMAGE#g" ${SPARK_VERSION_OVERRIDE:+-e "s#sparkVersion: .*#sparkVersion: $SPARK_VERSION_OVERRIDE#"} "$1" | oc apply -f - >/dev/null; }
 
 if [[ "${2:-}" == "--cleanup" ]]; then
   for f in "$D"/2*.yaml "$D"/1*.yaml; do oc delete -f "$f" --ignore-not-found >/dev/null 2>&1 || true; done
@@ -31,7 +32,7 @@ for crd in sparkapplications.sparkoperator.k8s.io sparkconnects.sparkoperator.k8
   oc get crd "$crd" >/dev/null 2>&1 && ok "CRD $crd present" || { bad "CRD $crd missing - is the Spark Operator component Managed in the DataScienceCluster?"; echo "== aborting"; exit 1; }
 done
 echo "  info: RHOAI $(oc get csv -A -o jsonpath='{range .items[?(@.spec.displayName=="Red Hat OpenShift AI")]}{.spec.version}{"\n"}{end}' 2>/dev/null | sort -u | head -1)" \
-     " spark operator: $(oc get sparkoperator default-sparkoperator -o jsonpath='{.spec.managementState}' 2>/dev/null || echo '?')"
+     " spark operator: $(oc get datasciencecluster -o jsonpath='{.items[0].spec.components.sparkoperator.managementState}' 2>/dev/null || echo '?')"
 
 PREREQS_ONLY=1 tests/cluster-test.sh "$IMAGE" >/dev/null   # test S3 + PostgreSQL, Secrets, job ConfigMap
 apply "$D/00-rbac.yaml"

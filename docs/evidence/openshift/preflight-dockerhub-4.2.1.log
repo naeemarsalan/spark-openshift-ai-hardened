@@ -1,0 +1,28 @@
+== cluster
+  PASS logged in as system:admin to https://api.spark.sandbox660.opentlc.com:6443
+  PASS OpenShift 4.20.27
+  PASS OpenShift AI 3.5.4
+== Spark Operator
+  PASS CRD sparkapplications.sparkoperator.k8s.io
+  PASS CRD sparkconnects.sparkoperator.k8s.io
+  WARN the operator's pod webhook covers only ["default"], not this project
+       expected on OpenShift AI: put volumes, env and securityContext in driver.template / executor.template (docs/openshift-ai.md)
+== project: spark-demo
+  PASS UID range 1000770000/10000 (pods run as a UID from this range, not the image's USER)
+  PASS labelled opendatahub.io/dashboard=true (workbenches can reach Spark Connect)
+  PASS no SCC granted in this project (restricted-v2 applies)
+  PASS you can create sparkapplications.sparkoperator.k8s.io
+  PASS you can create sparkconnects.sparkoperator.k8s.io
+  PASS you can create rolebindings
+  PASS you can create secrets
+  PASS you can create networkpolicies
+  PASS pull secret spark-pull exists
+== image: docker.io/apache/spark:4.2.1
+  PASS cluster can pull the image
+  PASS admitted by restricted-v2
+  PASS ran as UID:GID 1000770000:0 (arbitrary non-root UID, group 0)
+  PASS Spark's jars are read-only to the runtime user
+  FAIL work-dir is not writable by the assigned UID
+       fix: make it group 0 and mode 775 in the image
+  PASS Spark 4.2.1; openjdk version "21.0.13" 2026-10-20 LTS; Python 3.10.12
+== 19 passed, 1 warnings, 1 failed

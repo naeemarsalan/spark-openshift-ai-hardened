@@ -29,7 +29,7 @@ examples/run-local.sh
 **On a cluster**, through the OpenShift AI Spark Operator:
 
 ```bash
-examples/run-cluster.sh oci.arsalan.io/spark/spark-hi:4.3.0-3 oci.arsalan.io/spark/spark-examples:4.3.0-3
+examples/run-cluster.sh oci.arsalan.io/spark/spark-hi:4.2.1-2 oci.arsalan.io/spark/spark-examples:4.2.1-2
 ```
 
 **Verification**

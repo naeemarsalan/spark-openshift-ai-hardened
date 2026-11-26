@@ -14,7 +14,7 @@ TRIVY_IMAGE="${TRIVY_IMAGE:-ghcr.io/aquasecurity/trivy:0.76.2}"
 GRYPE_IMAGE="${GRYPE_IMAGE:-docker.io/anchore/grype:v0.122.1}"
 
 cd "$(dirname "$0")/.."
-# One report directory per image, e.g. reports/spark-hi_4.3.0-1/
+# One report directory per image, e.g. reports/spark-hi_4.2.1-2/
 NAME="$(basename "$IMAGE" | tr ':' '_')"
 C="$PWD/reports/cache"; R="$PWD/reports/$NAME"; mkdir -p "$C/trivy" "$C/grype" "$R"
 TAR="$R/image.tar"

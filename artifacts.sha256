@@ -37,7 +37,6 @@ dc1cf3063224ab6d5468f51ec3a064839e993eb47e324c2de546c79052e5b051  artifacts/jars
 741c6ab4d5c0cbd2fd20328576bf97eb1240afa3cb33a40311bf8b56034fa420  artifacts/jars/netty-transport-classes-kqueue-4.2.21.Final.jar
 5f445ad7e8c793f6adee57876a71ed1a01d39992a6e9fda8bb2f72ad351599a6  artifacts/jars/netty-transport-native-epoll-4.2.21.Final-linux-x86_64.jar
 47836e5fffa2e4aca994c5e31f992a12df2511a8be697d9bf104ac8c8df51459  artifacts/jars/netty-transport-native-unix-common-4.2.21.Final.jar
-2ba32dbf0a3a51f5690416c1225f26a5f9c190589bf9a23c8c1b54b9aaef167e  artifacts/jars/ojdbc17-23.26.4.0.0.jar
 25c4be0714581a5b33f6862ec972da30b9dd864ecb5b86698b288d0eb0d5b089  artifacts/jars/parquet-column-1.17.1.jar
 844c5779c5071a95cbc410d711eff408589cbecd6e7063d75a88dd47dbc582f1  artifacts/jars/parquet-common-1.17.1.jar
 afc8ca7c319c3ff21eb58f900dae067e36ef472f7c74d578ccf7a656f13f0908  artifacts/jars/parquet-encoding-1.17.1.jar
@@ -51,7 +50,7 @@ e55e970c9b3a593a6db7034391823a5f2366af209e6a1873b2fc1dababbe7fae  artifacts/jars
 a2cc73ea6db6e7925071f61c14d42028e5ddf93cb9e4cafd620ed504b3ac9cca  artifacts/jars/vertx-uri-template-4.5.36.jar
 ecc5f5f03984aab0d385ea47b2d016afe93b1a20b3917c6deb63cccdc8db0799  artifacts/jars/vertx-web-client-4.5.36.jar
 8c0f8ebbf78db198f7d3d7d63ab87e1f84d792f688adab20827b053954818a13  artifacts/jars/vertx-web-common-4.5.36.jar
-48f4eb55fe42758b3aff52c027b310479c7afe96205eddff3869cd951fa02505  artifacts/spark/spark-4.3.0-bin-hadoop3.tgz
+8766fd9132079ddf3f0b54a51796d05bf442871c62a51374ca9e18d345bb2bd6  artifacts/spark/spark-4.2.1-bin-hadoop3.tgz
 59e13344a9f3651aa201a03e2bee815a3bf43a4baf1f9ff8a9b62a840ce25fac  artifacts/wheels/googleapis_common_protos-1.76.0-py3-none-any.whl
 f279c333de857630e12ce2751672cb0825d1df2f6f2ec209d0d40f86a26e4ac3  artifacts/wheels/grpcio-1.85.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
 fbb3daafed3adba6ca2429508625a92b1b8ba35231788a6399c8c16661a8e997  artifacts/wheels/grpcio_status-1.85.4-py3-none-any.whl

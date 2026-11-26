@@ -1,0 +1,17 @@
+350a691dff57469a992980a4322da3340decc7e25d1fbc585f36acab6dd4eca7  artifacts/jars/bundle-2.59.9.jar
+d2d24e6b715b5656b9d238bf13b6682a07e2004dd36aad74a73aeb854319f4d9  artifacts/jars/hadoop-aws-3.4.2.jar
+5fbc0a70fe4d1d563d431a41b23f493d68807571f0bb49db0bb1737e83e9161f  artifacts/jars/mssql-jdbc-13.6.2.jre11.jar
+9776fca62dfc84f312d5c1aff9791f6f3cf56d518a8eca4a3a8dca7a95ef8881  artifacts/jars/postgresql-42.7.15.jar
+e9430aa52bd947cc0d3f1299afe5089dcd262166cd202ba6aa77095b8541642b  artifacts/spark/spark-4.1.4-bin-hadoop3.tgz
+59e13344a9f3651aa201a03e2bee815a3bf43a4baf1f9ff8a9b62a840ce25fac  artifacts/wheels/googleapis_common_protos-1.76.0-py3-none-any.whl
+f279c333de857630e12ce2751672cb0825d1df2f6f2ec209d0d40f86a26e4ac3  artifacts/wheels/grpcio-1.85.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+fbb3daafed3adba6ca2429508625a92b1b8ba35231788a6399c8c16661a8e997  artifacts/wheels/grpcio_status-1.85.4-py3-none-any.whl
+704d819265e5d1064d932968e9ee85fff2103ccc78c05b878c06943ba27b8507  artifacts/wheels/numpy-2.5.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+b3d11d2fda7eb164ef27ffc14b4fcab16a80e1ce67e9f57e19ec0afaf715ba89  artifacts/wheels/pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl
+89f23aa53c24553a2416fd4fd1ec06f74fa42b14b546d8883128813f775bbfd2  artifacts/wheels/protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl
+c718bf97a92a6dea97fd1062c3b9f9e2e83cb9cc926e752289fa4ffff41738f9  artifacts/wheels/pyarrow-26.0.1-cp312-cp312-manylinux_2_28_x86_64.whl
+a5e246f79eb80475e691bf93862cead98decd8a498cf53ba0516fcdc0f50dc1c  artifacts/wheels/python_dateutil-4.0.0-py3-none-any.whl
+7fed3fee8fd6bd4a2b7b75a8d56021d0624127bf69bd5691f115db929ac570b3  artifacts/wheels/pytz-2026.6-py2.py3-none-any.whl
+481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8  artifacts/wheels/typing_extensions-4.16.0-py3-none-any.whl
+0a10eec6e13ef16b627fabed9a5f2ba61a62b1c67f327305f4e7e412a70b4aec  artifacts/wheels/tzdata-2026.6-py2.py3-none-any.whl
+5a56ba0db2d244117ed744dfa8f6f5b366e14148e00de44723413b2f3938a902  artifacts/wheels/zstandard-0.25.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl

@@ -53,7 +53,7 @@ spec:
             - --conf
             - spark.driver.host=$(POD_IP)
             - --conf
-            - spark.driver.bindAddress=$(POD_IP)   # not 0.0.0.0: Spark 4.3 executors dial this address
+            - spark.driver.bindAddress=$(POD_IP)   # not 0.0.0.0: Spark 4.x executors dial this address
             - --conf
             - spark.driver.port=7078
             - --conf

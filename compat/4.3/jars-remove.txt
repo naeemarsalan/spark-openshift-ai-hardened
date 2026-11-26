@@ -1,0 +1,27 @@
+# Paths (shell globs, relative to $SPARK_HOME/jars) deleted from the upstream Spark
+# distribution before the jars in image/jars.txt are added.
+
+# Spark Connect JVM *client* REPL (Ammonite + a shaded copy of Netty/Guava). The server,
+# spark-submit and executors do not use it.
+connect-repl
+
+# Native libraries for platforms this image does not target.
+netty-tcnative-boringssl-static-*-linux-aarch_64.jar
+netty-tcnative-boringssl-static-*-osx-*.jar
+netty-tcnative-boringssl-static-*-windows-*.jar
+
+# Replaced by patched versions listed in image/jars.txt
+netty-*-4.2.13.Final*.jar
+jackson-core-2.21.2.jar
+jackson-databind-2.21.2.jar
+jackson-dataformat-yaml-2.21.2.jar
+jackson-datatype-jsr310-2.21.2.jar
+jackson-module-scala_2.13-2.21.2.jar
+log4j-*-2.25.4.jar
+vertx-*-4.5.26.jar
+parquet-*-1.17.0.jar
+derby*-10.16.1.1.jar
+lz4-java-1.11.0.jar
+snappy-java-1.1.10.8.jar
+guava-33.6.0-jre.jar
+jline-3.29.0-jdk8.jar

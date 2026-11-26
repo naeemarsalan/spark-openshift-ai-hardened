@@ -20,8 +20,8 @@ The regular build is real, not a strawman:
 **Procedure**
 
 ```bash
-podman build -f baseline/Containerfile.regular-ubi9 -t spark-regular-ubi9:4.3.0 baseline
-hack/verify-image.sh spark-regular-ubi9:4.3.0
+podman build -f baseline/Containerfile.regular-ubi9 -t spark-regular-ubi9:4.2.1 baseline
+hack/verify-image.sh spark-regular-ubi9:4.2.1
 hack/verify-image.sh <your spark-hi or spark-ubi9>
 ```
 
@@ -56,7 +56,7 @@ Full scan numbers: [scan-comparison.md](scan-comparison.md).
 |---|---|---|
 | [1](#1-nothing-is-downloaded-during-the-build) | Nothing is downloaded during the build | Build-history check |
 | [2](#2-vulnerable-bundled-libraries-are-replaced) | Vulnerable bundled libraries are replaced | Java findings 187 → 55 |
-| [3](#3-a-smaller-operating-system) | A smaller operating system | OS findings 603 → 370 → 50 |
+| [3](#3-a-smaller-operating-system) | A smaller operating system | OS findings 603 → 370 → 28 |
 | [4](#4-build-tools-do-not-ship) | Build tools do not ship | `pip` and cache checks |
 | [5](#5-no-setuid-binaries) | No setuid binaries | setuid check |
 | [6](#6-the-runtime-user-cannot-modify-spark) | The runtime user cannot modify Spark | Two permission checks |
@@ -90,7 +90,7 @@ Full scan numbers: [scan-comparison.md](scan-comparison.md).
 - Python wheels are installed with `pip --no-index`.
 
 > [!TIP]
-> In a bank pipeline, point `SPARK_MIRROR`, `MAVEN_REPO` and `PIP_INDEX_URL` at Artifactory.
+> In a locked-down pipeline, point `SPARK_MIRROR`, `MAVEN_REPO` and `PIP_INDEX_URL` at Artifactory.
 > The build farm then needs no route to the internet. RPMs come from whichever repository the
 > builder is configured for: Red Hat CDN, Satellite or a mirror.
 
@@ -107,7 +107,7 @@ ours:     PASS build history: no inline secrets, no curl/wget/git downloads
 
 **Before**
 
-Spark 4.3.0 ships about 280 jars. As shipped they carry 187 Trivy findings, four of them
+Spark 4.2.1 ships about 280 jars. As shipped they carry 187 Trivy findings, four of them
 critical.
 
 **After**
@@ -134,7 +134,7 @@ critical.
 
 - Java-library findings: 187 → 55 (Trivy).
 - Critical findings: 4 → 0.
-- The swapped image still passes every functional test, including S3, three JDBC engines and
+- The swapped image still passes every functional test, including S3, two JDBC engines and
   Spark Connect.
 
 ### 3. A smaller operating system
@@ -158,7 +158,7 @@ libstdc++, OpenJDK 21 headless and Python 3.12.
 
 **Evidence**
 
-OS findings 603 → 370 → 50. Which to pick: [choosing-a-base.md](choosing-a-base.md).
+OS findings 603 → 370 → 28. Which to pick: [choosing-a-base.md](choosing-a-base.md).
 
 ### 4. Build tools do not ship
 
@@ -207,7 +207,7 @@ Code running in the container can replace them: a notebook cell, a UDF, a compro
 dependency.
 
 ```
-$ podman run --rm --entrypoint bash spark-regular-ubi9:4.3.0 -c 'touch /opt/spark/jars/evil.jar && echo writable'
+$ podman run --rm --entrypoint bash spark-regular-ubi9:4.2.1 -c 'touch /opt/spark/jars/evil.jar && echo writable'
 writable
 ```
 
@@ -221,7 +221,7 @@ the arbitrary UID that `restricted-v2` assigns cannot write to it.
 - `/etc/passwd` is never made writable.
 
 ```
-$ podman run --rm --user 54321:0 --entrypoint bash spark-hi:4.3.0-3 -c 'touch /opt/spark/work-dir/x && echo ok; touch /opt/spark/jars/evil.jar'
+$ podman run --rm --user 54321:0 --entrypoint bash spark-hi:4.2.1-2 -c 'touch /opt/spark/work-dir/x && echo ok; touch /opt/spark/jars/evil.jar'
 ok
 touch: cannot touch '/opt/spark/jars/evil.jar': Permission denied
 ```
@@ -278,7 +278,7 @@ Upstream's `entrypoint.sh` starts with `set -ex` and ends with `exec tini`.
 - `tini` is not shipped as a Red Hat RPM, so the regular image does not even start:
 
 ```
-$ podman run --rm spark-regular-ubi9:4.3.0 /opt/spark/bin/run-example SparkPi 10
+$ podman run --rm spark-regular-ubi9:4.2.1 /opt/spark/bin/run-example SparkPi 10
 /opt/entrypoint.sh: line 120: /usr/bin/tini: No such file or directory
 ```
 

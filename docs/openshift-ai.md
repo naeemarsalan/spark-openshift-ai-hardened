@@ -31,9 +31,9 @@ Find your symptom, apply the fix.
 |---|---|---|
 | Job starts, then fails with a missing file, volume or environment variable (`can't open file '/jobs/...'`) | Flat pod fields are ignored outside the `default` namespace | Move them into `driver.template` and `executor.template`. [Point 1](#1-pod-settings-must-go-in-pod-templates) |
 | Pod is rejected at admission with a UID or SCC error | A manifest sets `runAsUser`, `runAsGroup` or `fsGroup` | Delete those fields. [Details](#what-restricted-v2-enforces-as-observed) |
-| Spark Connect server crash-loops | Spark 4.3 executors try to reach the driver at `0.0.0.0` | Set `spark.kubernetes.executor.useDriverPodIP: "false"`. [Point 2](#2-spark-43-with-an-operator-managed-spark-connect-server) |
-| `pip install pyspark-client==4.3.0` fails in a workbench | Red Hat's index stops at 4.2.0 | Install `pyspark-client>=4.2,<=4.3.0`. [Point 4](#4-workbenches-install-python-packages-from-red-hats-index) |
-| `spark-submit` fails with `networkpolicies ... is forbidden` | Spark 4.3 creates a NetworkPolicy per application | Exclude `NetworkPolicyFeatureStep`. [Point 5](#5-spark-43-spark-submit-creates-a-networkpolicy-per-application) |
+| Spark Connect server crash-loops | Executors try to reach the driver at `0.0.0.0` (Spark 4.2 and 4.3) | Set `spark.kubernetes.executor.useDriverPodIP: "false"`. [Point 2](#2-executors-cannot-reach-an-operator-managed-spark-connect-server) |
+| `pip install pyspark-client==4.2.1` fails in a workbench | Red Hat's index offers 4.0.1, 4.1.2 and 4.2.0 only | Install `pyspark-client>=4.2,<4.3`. [Point 4](#4-workbenches-install-python-packages-from-red-hats-index) |
+| `spark-submit` fails with `networkpolicies ... is forbidden` | Spark 4.2 and 4.3 create a NetworkPolicy per application | Exclude `NetworkPolicyFeatureStep`. [Point 5](#5-spark-submit-creates-a-networkpolicy-per-application) |
 | `getOrCreate()` **hangs** in a notebook | A NetworkPolicy is dropping the connection | Label the namespace `opendatahub.io/dashboard=true`. [Workbench](#workbench) |
 | Database password shows up in the Connect server log | A custom `SPARK_CONF_DIR` dropped the logger settings | Keep the four Connect loggers at WARN. [hardening.md](hardening.md#10-spark-connect-does-not-log-client-requests) |
 
@@ -44,21 +44,23 @@ Find your symptom, apply the fix.
 | OpenShift | 4.20.27 on AWS, 3 control-plane + 3 worker nodes, CRI-O 1.33 |
 | OpenShift AI | 3.5.4 (`stable-3.5`), components: Spark Operator, workbenches, dashboard |
 | Spark Operator | Red Hat build of Kubeflow Spark Operator v2.4.0 (bundles Spark 4.0.1 for `spark-submit`) |
-| Images | `spark-hi:4.3.0-3` and `spark-ubi9:4.3.0-3` (Spark 4.3.0) |
+| Images | `spark-hi:4.2.1-2` and `spark-ubi9:4.2.1-2` (Spark 4.2.1) |
 | Namespace | Ordinary project, **no SCC granted** to any service account |
-| Date | 2026-11-25 |
+| Date | 2026-11-26 |
 
-Captured cluster state: [evidence/openshift/00-cluster.txt](evidence/openshift/00-cluster.txt).
+Captured cluster state: [evidence/openshift/00-cluster-2026-11-25.txt](evidence/openshift/00-cluster-2026-11-25.txt).
+Other Spark versions on the same cluster: [compatibility.md](compatibility.md).
 
 ## Results
 
 | Test | `spark-hi` | `spark-ubi9` |
 |---|---|---|
-| `tests/cluster-test-openshift-ai.sh` | ✅ [9 / 9](evidence/openshift/02-operator-spark-hi.log) | ✅ [9 / 9](evidence/openshift/05-operator-spark-ubi9.log) |
-| `examples/run-cluster.sh` | ✅ [5 / 5](evidence/openshift/03-examples-spark-hi.log) | ✅ [5 / 5](evidence/openshift/07-examples-spark-ubi9-server.log) ¹ |
-| `tests/security-cluster.sh` | ✅ [10 / 10](evidence/openshift/04-security-spark-hi.log) | ✅ [10 / 10](evidence/openshift/06-security-spark-ubi9.log) |
-| `tests/cluster-test.sh` | ✅ [8 / 8](evidence/openshift/11-spark-submit-no-operator-spark-hi.log) | not run |
-| Workbench notebook | not run | ✅ [pass](evidence/openshift/10-workbench-executed.ipynb) ² |
+| `tests/cluster-test-openshift-ai.sh` | ✅ [9 / 9](evidence/openshift/4.2.1-hi-operator.log) | ✅ [9 / 9](evidence/openshift/4.2.1-ubi9-operator.log) |
+| `examples/run-cluster.sh` | ✅ [5 / 5](evidence/openshift/4.2.1-hi-examples.log) | ✅ [5 / 5](evidence/openshift/4.2.1-ubi9-examples.log) ¹ |
+| `tests/security-cluster.sh` | ✅ [10 / 10](evidence/openshift/4.2.1-hi-security.log) | ✅ [10 / 10](evidence/openshift/4.2.1-ubi9-security.log) |
+| `tests/cluster-test.sh` | ✅ [8 / 8](evidence/openshift/4.2.1-hi-native.log) | ✅ [8 / 8](evidence/openshift/4.2.1-ubi9-native.log) |
+| `tests/compat-clients.sh` | ✅ [7 / 7](evidence/openshift/4.2.1-hi-clients.log) | ✅ [7 / 7](evidence/openshift/4.2.1-ubi9-clients.log) |
+| `tests/workbench-test.sh` ² | ✅ [pass](evidence/openshift/4.2.1-hi-workbench.log) | ✅ [pass](evidence/openshift/4.2.1-ubi9-workbench.log) |
 
 **What each test covers**
 
@@ -68,17 +70,32 @@ Captured cluster state: [evidence/openshift/00-cluster.txt](evidence/openshift/0
 | `run-cluster.sh` | PySpark ETL → Scala report → Spark Connect client, on shared data |
 | `security-cluster.sh` | NetworkPolicy allow and deny cases; driver RBAC; credentials absent from every spec and every pod log |
 | `cluster-test.sh` | The same without the operator: `spark-submit` in cluster mode from a Job, and a Spark Connect Deployment |
-| Workbench notebook | `workbench.ipynb` executed inside a real OpenShift AI workbench against the `SparkConnect` server |
+| `compat-clients.sh` | Seven `pyspark-client` versions, each running a pandas UDF, S3 and JDBC through the server |
+| `workbench-test.sh` | `workbench.ipynb` executed top to bottom inside a real OpenShift AI workbench pod against the `SparkConnect` server |
 
 ¹ Spark Connect server on `spark-ubi9`. The two batch jobs use the `spark-examples` image,
 which is built on `spark-hi`.
 
-² Run against the `spark-ubi9` server, once with client 4.2.0 from Red Hat's index and once
-with 4.3.0 from PyPI. The server image differs from `spark-hi` only in its base.
+² Both runs used `pyspark-client` 4.2.0 from Red Hat's index, the workbench default. Other
+client versions are covered by `compat-clients.sh`.
+
+**The Docker Hub image, unmodified, on the same cluster**
+
+| Test | `docker.io/apache/spark:4.2.1` |
+|---|---|
+| `tests/cluster-test-openshift-ai.sh` | ❌ [5 / 9](evidence/openshift/dockerhub-4.2.1-operator.log) |
+
+- Every pod was admitted by `restricted-v2`, and the Spark Connect server started.
+- Both `SparkApplication` jobs failed. The first error is
+  `AccessDeniedException: /opt/spark/work-dir/...`: the working directory is not writable by
+  the UID OpenShift assigns.
+- The Connect client checks failed because the image has Python 3.10, not 3.12.
+
+Why, and what to use instead: [bring-your-own-image.md](bring-your-own-image.md#three-starting-points).
 
 > [!NOTE]
-> The first run of the operator test had one failure, kept as
-> [evidence](evidence/openshift/01-operator-spark-hi-first-run-1-failure.log). It was a real
+> The first ever run of the operator test (with Spark 4.3.0) had one failure, kept as
+> [evidence](evidence/openshift/first-run-4.3.0-operator-1-failure.log). It was a real
 > difference between OpenShift AI and the upstream operator:
 > [point 1](#1-pod-settings-must-go-in-pod-templates).
 
@@ -189,12 +206,15 @@ Every manifest in [`deploy/openshift-ai/`](../deploy/openshift-ai) and
 [`examples/openshift-ai/`](../examples/openshift-ai) does this. The upstream operator on a
 plain Kubernetes cluster accepts both forms, so the templates are portable.
 
-### 2. Spark 4.3 with an operator-managed Spark Connect server
+### 2. Executors cannot reach an operator-managed Spark Connect server
 
 **Symptom:** the Spark Connect server crash-loops.
 
-**Cause:** the operator starts the server with `spark.driver.bindAddress=0.0.0.0`. Spark 4.3
-executors then try to reach the driver at `0.0.0.0`.
+**Applies to:** Spark 4.2 and 4.3. The setting is harmless on 4.0 and 4.1, which were tested
+with it in place.
+
+**Cause:** the operator starts the server with `spark.driver.bindAddress=0.0.0.0`. Executors
+then try to reach the driver at `0.0.0.0`.
 
 **Fix:** add this to the `SparkConnect` resource.
 
@@ -221,32 +241,35 @@ sparkConf:
 **Symptom:**
 
 ```
-ERROR: Could not find a version that satisfies the requirement pyspark-client==4.3.0 (from versions: 4.0.1, 4.1.2, 4.2.0)
+ERROR: Could not find a version that satisfies the requirement pyspark-client==4.2.1 (from versions: 4.0.1, 4.1.2, 4.2.0)
 ```
 
 **Cause:** a workbench's `pip` points at Red Hat's package index, not PyPI. In OpenShift AI
 3.5 that index offers `pyspark-client` 4.0.1, 4.1.2 and 4.2.0.
 
-**Fix:** install a range. The notebook uses `pyspark-client>=4.2,<=4.3.0`, which resolves to
-whichever the configured index has.
+**Fix:** install a range. The notebook uses `pyspark-client>=4.2,<4.3`, which resolves to
+4.2.0 on Red Hat's index.
 
-Both clients were tested from a real workbench against the 4.3.0 server, running the whole
-notebook: S3 read, pandas UDF on the executors, Spark SQL, JDBC read.
+Seven client versions were tested against each server version, and the whole notebook was run
+from a real workbench (S3 read, pandas UDF on the executors, Spark SQL, JDBC read):
 
-| Client | Source | Result |
+| Client | Source | Result against the 4.2.1 server |
 |---|---|---|
-| `pyspark-client` 4.2.0 | Red Hat's index (workbench default) | ✅ [pass](evidence/openshift/09-workbench-client-4.2.0-redhat-index.log) |
-| `pyspark-client` 4.3.0 | `--index-url https://pypi.org/simple` | ✅ [pass](evidence/openshift/08-workbench-client-4.3.0-pypi.log) |
+| `pyspark-client` 4.0.1, 4.1.2, 4.2.0 | Red Hat's index (workbench default) | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) |
+| `pyspark-client` 4.0.5, 4.1.4, 4.2.1, 4.3.0 | `--index-url https://pypi.org/simple` | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) |
+| Notebook in a workbench, client 4.2.0 | Red Hat's index | ✅ [pass](evidence/openshift/4.2.1-hi-workbench.log) |
+
+Full client and server matrix: [compatibility.md](compatibility.md#notebook-client-against-server).
 
 > [!NOTE]
 > OpenShift AI 3.5 is built around Spark 4.0.1 (the operator) and up to 4.2.0 (the index).
-> Spark 4.3.0 works but is ahead of what Red Hat ships. If staying inside Red Hat's tested
-> versions matters more than having the newest Spark, set `SPARK_VERSION` in `versions.env` to
-> match and rebuild.
+> That is why this repo defaults to Spark 4.2.1. To build another version, see
+> [compatibility.md](compatibility.md#build-another-version).
 
-### 5. Spark 4.3 `spark-submit` creates a NetworkPolicy per application
+### 5. `spark-submit` creates a NetworkPolicy per application
 
-**Applies only** when you run `spark-submit` yourself, without the operator
+**Applies only** to Spark 4.2 and 4.3, and only when you run `spark-submit` yourself, without
+the operator
 ([`deploy/30-spark-submit-job.yaml`](../deploy/30-spark-submit-job.yaml)). The operator path is
 not affected, because the operator submits with its own Spark 4.0.1.
 
@@ -257,7 +280,7 @@ networkpolicies.networking.k8s.io "spark-pi-scala-...-policy" is forbidden:
 User "system:serviceaccount:spark-native:spark" cannot patch resource "networkpolicies"
 ```
 
-**Cause:** Spark 4.3 adds a step that creates a NetworkPolicy for each application. The usual
+**Cause:** Spark 4.2 and 4.3 have a step that creates a NetworkPolicy for each application. The usual
 driver Role (pods, services, config maps) does not allow it.
 
 **Fix:** exclude the step. NetworkPolicies stay with the namespace administrator.
@@ -330,7 +353,7 @@ checks that no value from that Secret appears in any pod spec, ConfigMap, `Spark
 
 **Verification**
 
-`spark.version` prints `4.3.0`. It comes from the server image, not the client.
+`spark.version` prints `4.2.1`. It comes from the server image, not the client.
 
 **If it hangs**
 
@@ -362,7 +385,7 @@ Compared with the examples in Red Hat's operator source,
 | Driver RBAC named `spark-operator-spark` / `spark-role` per namespace | Same names, [`00-rbac.yaml`](../deploy/openshift-ai/00-rbac.yaml) |
 | `SparkConnect` resource, Service and NetworkPolicy for workbenches | [`20-sparkconnect.yaml`](../deploy/openshift-ai/20-sparkconnect.yaml) |
 | Workbench: `pip install pyspark==<server version>` | Thin `pyspark-client`, see [point 4](#4-workbenches-install-python-packages-from-red-hats-index) |
-| Example images on Spark 4.0.1 | Spark 4.3.0 built from pinned artifacts |
+| Example images on Spark 4.0.1 | Spark 4.2.1 built from pinned artifacts; 4.0.5, 4.1.4 and 4.3.0 also tested |
 
 ## Rehearsing without OpenShift
 
@@ -394,4 +417,4 @@ tests/cluster-test-openshift-ai.sh <image>
 
 ---
 
-**Next:** [walkthrough](walkthrough.md) · [evidence](evidence/)
+**Next:** [compatibility](compatibility.md) · [walkthrough](walkthrough.md) · [evidence](evidence/)

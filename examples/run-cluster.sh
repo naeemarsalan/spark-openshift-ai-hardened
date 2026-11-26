@@ -5,7 +5,7 @@
 #   3. Spark Connect client pod (stands in for a workbench) against the SparkConnect server
 #
 # Usage: examples/run-cluster.sh <base-image> <examples-image>
-#   e.g. examples/run-cluster.sh oci.arsalan.io/spark/spark-hi:4.3.0-3 oci.arsalan.io/spark/spark-examples:4.3.0-3
+#   e.g. examples/run-cluster.sh oci.arsalan.io/spark/spark-hi:4.2.1-2 oci.arsalan.io/spark/spark-examples:4.2.1-2
 set -euo pipefail
 BASE="${1:?usage: run-cluster.sh <base-image> <examples-image>}"; APP="${2:?examples image}"
 cd "$(dirname "$0")/.."

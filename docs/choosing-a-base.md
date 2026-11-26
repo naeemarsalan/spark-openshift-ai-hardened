@@ -3,8 +3,9 @@
 > [!NOTE]
 > **In short**
 >
-> - **Your scanner recognises Red Hat Hardened Images?** Use `spark-hi`. It has about one
->   seventh of the OS findings.
+> - **Default: the hardened image, `spark-hi`.** It is safer by default: 28 OS findings
+>   against 370 on UBI 9.
+> - **Check one thing first:** that your scanner recognises Red Hat Hardened Images.
 > - **It does not, or you need a RHEL 9 benchmark or a fixed OS version?** Use `spark-ubi9`.
 > - **Not sure?** Scan both with your scanner first. That answers it.
 >
@@ -29,7 +30,7 @@
 | Image | `oci.arsalan.io/spark/spark-hi` | `oci.arsalan.io/spark/spark-ubi9` |
 | Built from | `registry.access.redhat.com/hi/openjdk:21-runtime-builder` → `FROM scratch` | `registry.access.redhat.com/ubi9/ubi-minimal:9.9` |
 | OS packages | 78 | 139 |
-| OS findings (Grype) | 50 (29 unique CVEs) | 370 (228 unique CVEs) |
+| OS findings (Grype) | 28 (14 unique CVEs) | 370 (228 unique CVEs) |
 | OS findings with a fix available | 0 | 0 |
 | Package manager in the image | none | `microdnf`, `rpm` |
 | `curl` in the image | no | yes |
@@ -38,6 +39,9 @@
 | Release model | rolling | RHEL 9 minor releases, long lifecycle |
 | Hardening checks | 16 / 16 | 16 / 16 |
 | Tested on OpenShift AI 3.5 under `restricted-v2` | yes | yes |
+
+The Docker Hub image is the third starting point. It is compared in
+[bring-your-own-image.md](bring-your-own-image.md#three-starting-points).
 
 ## Use the hardened image when
 
@@ -62,34 +66,29 @@
 | Cost | What to do about it |
 |---|---|
 | **A rolling base** | Pin the builder image by digest and rebuild on a schedule. Do not track a floating tag in production. |
-| **Scanner support** | Trivy 0.76.2 skipped its RPMs entirely. Grype 0.122.1 handled them. The bank's scanner is unknown and must be tried. |
+| **Scanner support** | Trivy 0.76.2 skipped its RPMs entirely. Grype 0.122.1 handled them. Try your own scanner before you decide. |
 | **A slightly unusual build** | There is no ready-made runtime image to start `FROM`. The builder installs RPMs into a directory and the final stage copies it into `scratch`: about ten extra lines. The release package must be installed, or scanners cannot identify the OS at all. |
 | **No fallback tools** | `nss_wrapper` is not available, so the image relies on the container runtime to supply a passwd entry for the assigned UID. CRI-O on OpenShift does. This is verified on a real cluster. |
 
-## What neither base fixes
+## What neither base changes
 
-Changing the base does nothing for the **55 Java-library findings**. They are inside Spark's
+The base does nothing for the **55 Java-library findings**. They are inside Spark's
 own dependencies and are identical on both. Neither base reaches zero OS findings either,
 because none of the remaining ones has a fixed package to move to.
 
-Getting to an actual zero needs decisions outside the image build:
-
-| Remaining | Count | Options |
-|---|---|---|
-| Shaded libraries | 51 | Rebuild Spark and the Hadoop client from source with newer dependencies, re-shade the affected jars in the builder stage, or record VEX justifications |
-| Hive 2.3 jars | 4 | Remove them. This also removes `enableHiveSupport()` and Hive Metastore access |
-| OS findings with no fix | 50 or 370 | Accept with the vendor's assessment as justification. This is the normal treatment for "will not fix" and "fix deferred" Red Hat CVEs |
+That is expected. The aim is the safer starting point, not zero. What is left and why:
+[scan-comparison.md](scan-comparison.md#what-is-left).
 
 ## Not verified
 
 - The support and subscription terms of Red Hat Hardened Images.
 - Whether FIPS-validated variants exist for the packages used here.
-- How the bank's scanner treats either base.
+- How your organisation's scanner treats either base.
 
 > [!IMPORTANT]
-> Confirm the first two with Red Hat before recommending the hardened images to a regulated
-> customer.
+> Confirm the first two with Red Hat before adopting the hardened images in a regulated
+> environment.
 
 ---
 
-**Next:** [scan comparison](scan-comparison.md) · [walkthrough](walkthrough.md)
+**Next:** [bring your own image](bring-your-own-image.md) · [scan comparison](scan-comparison.md) · [walkthrough](walkthrough.md)

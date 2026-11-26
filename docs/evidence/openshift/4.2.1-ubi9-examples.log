@@ -1,0 +1,17 @@
+== cluster: https://api.spark.sandbox660.opentlc.com:6443  base: oci.arsalan.io/spark/spark-ubi9:4.2.1-2  app: oci.arsalan.io/spark/spark-examples:4.2.1-2
+  PASS example-etl: ETL_OK raw=200000 curated=195979 rejected=4021 summary_rows=6
+  PASS example-report: SCALA_REPORT_OK categories=6 top_n=3 rows=18 high_risk_txns=107344
+  PASS connect client: CONNECT_EXAMPLE_OK txns=195979 categories=6 bands={'medium': 58875, 'small': 19320, 'large': 117784}
+== SCC / UID of every Spark pod
+  example-connect-client  restricted-v2  1000770000  oci.arsalan.io/spark/spark-examples:4.2.1-2
+  example-etl-driver      restricted-v2  1000770000  oci.arsalan.io/spark/spark-examples:4.2.1-2
+  example-report-driver   restricted-v2  1000770000  oci.arsalan.io/spark/spark-examples:4.2.1-2
+  oai-connect-client      restricted-v2  1000770000  oci.arsalan.io/spark/spark-ubi9:4.2.1-2
+  s3-jdbc-python-driver   restricted-v2  1000770000  oci.arsalan.io/spark/spark-ubi9:4.2.1-2
+  spark-connect-exec-1    restricted-v2  1000770000  oci.arsalan.io/spark/spark-ubi9:4.2.1-2
+  spark-connect-exec-2    restricted-v2  1000770000  oci.arsalan.io/spark/spark-ubi9:4.2.1-2
+  spark-connect-server    restricted-v2  1000770000  oci.arsalan.io/spark/spark-ubi9:4.2.1-2
+  spark-pi-scala-driver   restricted-v2  1000770000  oci.arsalan.io/spark/spark-ubi9:4.2.1-2
+  PASS all 9 Spark pods admitted by restricted-v2
+  PASS all Spark pods run as a namespace-assigned UID
+== 5 passed, 0 failed

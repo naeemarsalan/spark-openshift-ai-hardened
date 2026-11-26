@@ -1,0 +1,13 @@
+# Compatibility profile for Spark 4.1: S3 and JDBC libraries only.
+# The bundled libraries are left exactly as upstream ships them. The CVE remediation in
+# image/jars.txt is maintained for the default Spark line only.
+
+# --- S3 (S3A connector). hadoop-aws MUST equal the Hadoop version Spark 4.1 was built against.
+org.apache.hadoop:hadoop-aws:3.4.2
+software.amazon.awssdk:bundle:2.59.9
+
+# --- JDBC drivers
+org.postgresql:postgresql:42.7.15
+com.microsoft.sqlserver:mssql-jdbc:13.6.2.jre11
+# Oracle driver: opt-in, see image/jars.txt
+#com.oracle.database.jdbc:ojdbc17:23.26.4.0.0

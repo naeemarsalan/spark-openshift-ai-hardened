@@ -13,7 +13,7 @@ spec:
   mainClass: org.apache.spark.examples.SparkPi
   mainApplicationFile: local:///opt/spark/examples/jars/spark-examples.jar
   arguments: ["200"]
-  sparkVersion: 4.3.0
+  sparkVersion: 4.2.1
   restartPolicy: { type: Never }
   # Pod settings (env, volumes, securityContext) go in driver.template / executor.template.
   # The flat fields (driver.envFrom, spec.volumes, ...) are applied by the operator's pod

@@ -11,7 +11,7 @@ spec:
   mainClass: com.example.report.CategoryReport
   mainApplicationFile: local:///opt/spark/app/category-report.jar
   arguments: ["3"]
-  sparkVersion: 4.3.0
+  sparkVersion: 4.2.1
   restartPolicy: { type: Never }
   # Pod settings (env, volumes, securityContext) go in driver.template / executor.template.
   # The flat fields (driver.envFrom, spec.volumes, ...) are applied by the operator's pod
