@@ -1,7 +1,9 @@
 # Example projects
 
-A small pipeline that exercises everything the image is meant to do. Each stage checks its own
-result and prints a marker line; the runners fail if a marker is missing.
+> [!NOTE]
+> **In short:** a three-stage pipeline that exercises everything the image is meant to do.
+> One command runs it locally, one runs it on a cluster. Each stage checks its own result and
+> the runner fails if a stage does not report success.
 
 | # | Project | Language / mode | What it proves |
 |---|---|---|---|
@@ -18,12 +20,24 @@ with the Scala compiler that ships inside Spark, so the build needs no sbt/Maven
 
 ## Run
 
-```bash
-examples/run-local.sh                       # podman, Spark local mode, throwaway S3 + PostgreSQL
+**Locally** (podman, Spark local mode, throwaway S3 and PostgreSQL):
 
-# On a cluster, through the OpenShift AI Spark Operator:
+```bash
+examples/run-local.sh
+```
+
+**On a cluster**, through the OpenShift AI Spark Operator:
+
+```bash
 examples/run-cluster.sh oci.arsalan.io/spark/spark-hi:4.3.0-3 oci.arsalan.io/spark/spark-examples:4.3.0-3
 ```
+
+**Verification**
+
+| Command | Ends with |
+|---|---|
+| `run-local.sh` | `== 3 passed, 0 failed` |
+| `run-cluster.sh` | `== 5 passed, 0 failed` |
 
 `run-cluster.sh` submits stages 1 and 2 as `SparkApplication` resources
 ([`openshift-ai/`](openshift-ai/)), and runs stage 3 from a pod against the `SparkConnect`

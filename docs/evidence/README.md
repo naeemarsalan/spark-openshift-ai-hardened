@@ -1,8 +1,16 @@
 # Evidence
 
-Raw output behind the numbers in the guide. Captured 2026-11-25. Colour codes are stripped;
-nothing else is edited. No file here contains a credential value (checked against every Secret
-on the test cluster).
+> [!NOTE]
+> **In short:** the raw output behind every number in the guide, captured 2026-11-25. Colour
+> codes are stripped and nothing else is edited. No file contains a credential value (checked
+> against every Secret on the test cluster).
+
+| Folder | Holds |
+|---|---|
+| [`openshift/`](openshift/) | Test runs on the real cluster |
+| [`scans/`](scans/) | Per-CVE lists for the four scanned images |
+| [`image-checks/`](image-checks/) | Output of the 16 hardening checks |
+| [`local/`](local/) | Test runs on the build machine |
 
 ## `openshift/` — OpenShift 4.20.27, OpenShift AI 3.5.4
 

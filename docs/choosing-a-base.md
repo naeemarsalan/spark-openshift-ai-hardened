@@ -1,10 +1,37 @@
 # Choosing a base: hardened image or UBI 9
 
-The repo builds the same Spark layer on two Red Hat bases. Everything in
-[hardening.md](hardening.md) applies to both. This page is only about the base.
+> [!NOTE]
+> **In short**
+>
+> - **Your scanner recognises Red Hat Hardened Images?** Use `spark-hi`. It has about one
+>   seventh of the OS findings.
+> - **It does not, or you need a RHEL 9 benchmark or a fixed OS version?** Use `spark-ubi9`.
+> - **Not sure?** Scan both with your scanner first. That answers it.
+>
+> The Spark layer and all the hardening in [hardening.md](hardening.md) are the same on both.
 
-| | Red Hat Hardened Images (`Containerfile`) | UBI 9 minimal (`Containerfile.ubi9`) |
+## Decide in three questions
+
+```mermaid
+flowchart TD
+  Q1{"Does your scanner report<br/>OS packages for spark-hi?"}
+  Q1 -- "No, or it reports zero" --> UBI["Use spark-ubi9"]
+  Q1 -- Yes --> Q2{"Does policy require a RHEL 9<br/>benchmark or a fixed OS version?"}
+  Q2 -- Yes --> UBI
+  Q2 -- No --> Q3{"Do you need a shell with<br/>curl or a package manager?"}
+  Q3 -- Yes --> UBI
+  Q3 -- No --> HI["Use spark-hi"]
+```
+
+> [!WARNING]
+> A scanner that does not recognise the distribution reports **zero OS findings**. That looks
+> like a pass and is not one. Trivy 0.76.2 does exactly this with the hardened base.
+
+## Side by side
+
+| | Red Hat Hardened Images | UBI 9 minimal |
 |---|---|---|
+| File | `Containerfile` | `Containerfile.ubi9` |
 | Image | `oci.arsalan.io/spark/spark-hi` | `oci.arsalan.io/spark/spark-ubi9` |
 | Built from | `registry.access.redhat.com/hi/openjdk:21-runtime-builder` → `FROM scratch` | `registry.access.redhat.com/ubi9/ubi-minimal:9.9` |
 | OS packages | 78 | 139 |
@@ -15,25 +42,22 @@ The repo builds the same Spark layer on two Red Hat bases. Everything in
 | Trivy scans its OS packages | **no** (0.76.2 does not recognise the OS) | yes |
 | Grype scans its OS packages | yes | yes |
 | Release model | rolling | RHEL 9 minor releases, long lifecycle |
+| Hardening checks | 16 / 16 | 16 / 16 |
 | Tested on OpenShift AI 3.5 under `restricted-v2` | yes | yes |
-
-Both pass all 16 hardening checks and all functional and security tests.
 
 ## Use the hardened image when
 
-- **The target is the lowest possible finding count.** It has about one seventh of the OS
-  findings, because it has fewer packages and newer ones.
-- **You want the smallest attack surface.** No package manager, no `curl`, no setuid programs
-  were ever installed, rather than installed and then stripped.
-- **Your scanner understands it.** Check this first. A scanner that does not recognise the
-  distribution reports zero OS findings, which looks like a pass and is not one.
+- **You want the lowest finding count.** Fewer packages, and newer ones.
+- **You want the smallest attack surface.** No package manager, no `curl`, no setuid programs.
+  They were never installed, rather than installed and then stripped.
+- **Your scanner understands it.** Check this first.
 
 ## Use UBI 9 when
 
-- **Your scanner or compliance tooling does not recognise the hardened distribution yet**, or
-  policy requires an OS your tooling has a benchmark for (for example a RHEL 9 STIG or CIS
-  profile).
-- **You need a fixed OS version for a long time.** UBI 9 follows RHEL 9's lifecycle; the
+- **Your scanner or compliance tooling does not recognise the hardened distribution yet.**
+- **Policy requires an OS your tooling has a benchmark for**, such as a RHEL 9 STIG or CIS
+  profile.
+- **You need a fixed OS version for a long time.** UBI 9 follows RHEL 9's lifecycle. The
   hardened images move forward continuously, so a rebuild can bring a new major version of a
   package.
 - **You need to debug in the container.** UBI minimal still has `microdnf` and `curl`.
@@ -41,36 +65,37 @@ Both pass all 16 hardening checks and all functional and security tests.
 
 ## What the hardened base costs you
 
-- **A rolling base.** Pin the builder image by digest and rebuild on a schedule; do not track
-  a floating tag in production.
-- **Scanner support.** Trivy 0.76.2 skipped its RPMs entirely. Grype 0.122.1 handled them. The
-  bank's scanner is unknown and must be tried.
-- **A slightly unusual build.** There is no ready-made runtime image to start `FROM`: the
-  builder installs RPMs into a directory and the final stage copies it into `scratch`. It is
-  about ten extra lines in the Containerfile, and the image needs its release package installed
-  or scanners cannot identify the OS at all.
-- **No fallback tools.** `nss_wrapper` is not available, so the image relies on the container
-  runtime to supply a passwd entry for the assigned UID. CRI-O on OpenShift does; this is
-  verified on a real cluster.
+| Cost | What to do about it |
+|---|---|
+| **A rolling base** | Pin the builder image by digest and rebuild on a schedule. Do not track a floating tag in production. |
+| **Scanner support** | Trivy 0.76.2 skipped its RPMs entirely. Grype 0.122.1 handled them. The bank's scanner is unknown and must be tried. |
+| **A slightly unusual build** | There is no ready-made runtime image to start `FROM`. The builder installs RPMs into a directory and the final stage copies it into `scratch`: about ten extra lines. The release package must be installed, or scanners cannot identify the OS at all. |
+| **No fallback tools** | `nss_wrapper` is not available, so the image relies on the container runtime to supply a passwd entry for the assigned UID. CRI-O on OpenShift does. This is verified on a real cluster. |
 
 ## What neither base fixes
 
-Changing the base does nothing for the 55 Java-library findings: they are inside Spark's own
-dependencies and are identical on both. Nor does either base reach zero OS findings, because
-none of the remaining ones has a fixed package to move to. Getting to an actual zero needs
-decisions outside the image build:
+Changing the base does nothing for the **55 Java-library findings**. They are inside Spark's
+own dependencies and are identical on both. Neither base reaches zero OS findings either,
+because none of the remaining ones has a fixed package to move to.
 
-1. **Shaded libraries (51 findings).** Rebuild Spark and the Hadoop client from source with
-   newer dependency versions, re-shade the affected jars in the builder stage, or record VEX
-   justifications for them.
-2. **Hive 2.3 jars (4 findings).** Removing them clears the findings and removes
-   `enableHiveSupport()` and Hive Metastore access.
-3. **OS findings with no fix.** Accept with the vendor's assessment as justification, which is
-   the normal treatment for "will not fix" and "fix deferred" Red Hat CVEs.
+Getting to an actual zero needs decisions outside the image build:
+
+| Remaining | Count | Options |
+|---|---|---|
+| Shaded libraries | 51 | Rebuild Spark and the Hadoop client from source with newer dependencies, re-shade the affected jars in the builder stage, or record VEX justifications |
+| Hive 2.3 jars | 4 | Remove them. This also removes `enableHiveSupport()` and Hive Metastore access |
+| OS findings with no fix | 50 or 370 | Accept with the vendor's assessment as justification. This is the normal treatment for "will not fix" and "fix deferred" Red Hat CVEs |
 
 ## Not verified
 
-- The support and subscription terms of Red Hat Hardened Images, and whether FIPS-validated
-  variants exist for the packages used here. Confirm with Red Hat before recommending them to a
-  regulated customer.
+- The support and subscription terms of Red Hat Hardened Images.
+- Whether FIPS-validated variants exist for the packages used here.
 - How the bank's scanner treats either base.
+
+> [!IMPORTANT]
+> Confirm the first two with Red Hat before recommending the hardened images to a regulated
+> customer.
+
+---
+
+**Next:** [scan comparison](scan-comparison.md) · [walkthrough](walkthrough.md)
