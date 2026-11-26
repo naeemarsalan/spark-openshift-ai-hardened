@@ -54,13 +54,34 @@ proves it.
 
 ## Architecture
 
-![Architecture: build machine, image registry, OpenShift AI project](docs/images/architecture.png)
+```mermaid
+flowchart TB
+  subgraph build["1. Build machine"]
+    direction LR
+    F["make fetch<br/>download once, verify, lock"] --> B["make build<br/>offline, from ./artifacts"]
+    B --> V["make verify<br/>16 hardening checks"]
+    V --> S["make scan<br/>Trivy and Grype"]
+  end
+  R[("2. Image registry")]
+  subgraph ocp["3. OpenShift AI project (restricted-v2, no SCC granted)"]
+    direction LR
+    W["Workbench notebook"] -->|"port 15002"| C["Spark Connect server"]
+    OP["Spark Operator"] -->|"creates"| D["Driver pod"]
+    OP -->|"creates"| C
+    D --> E["Executor pods<br/>Scala and Python"]
+    C --> E
+    E --> S3[("S3")]
+    E --> DB[("Database")]
+  end
+  build -->|"make push"| R
+  R -->|"pulled by every Spark pod"| ocp
+```
+
+Use the controls on the diagram to zoom, pan or open it full screen.
 
 1. **Build machine:** fetch once, build offline, check, scan.
 2. **Registry:** `make push` puts the image there; every Spark pod pulls it.
 3. **OpenShift AI project:** the Spark Operator creates driver pods and the Spark Connect server. Both start executors, which read and write S3 and the database. A workbench notebook talks to Spark Connect on port 15002.
-
-Diagram source: [`docs/images/architecture.mmd`](docs/images/architecture.mmd).
 
 ## Requirements
 
