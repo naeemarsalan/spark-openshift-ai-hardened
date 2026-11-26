@@ -1,20 +1,20 @@
-# What the hardened build changes, and the evidence
+# What the hardened build changes
 
 > [!NOTE]
-> **In short:** twelve changes separate a regular UBI Spark image from this one. Each has a
-> file that makes it and a check that proves it. A regular build passes 9 of the 16 checks.
+> **In short:** twelve changes separate a regular UBI Spark image from this one. Each one names the
+> file that makes it and the check that tests it. A regular build passes 9 of the 16 checks.
 > This build passes 16.
 
 **On this page**
 
-- [See it yourself](#see-it-yourself)
+- [Run the comparison](#run-the-comparison)
 - [Summary](#summary)
 - [The twelve changes](#the-twelve-changes)
 - [The 16 checks](#the-16-checks)
 
-## See it yourself
+## Run the comparison
 
-The regular build is real, not a strawman:
+The regular build is
 [`baseline/Containerfile.regular-ubi9`](../baseline/Containerfile.regular-ubi9).
 
 **Procedure**
@@ -52,7 +52,7 @@ Full scan numbers: [scan-comparison.md](scan-comparison.md).
 
 ## The twelve changes
 
-| # | Change | Proof |
+| # | Change | Check |
 |---|---|---|
 | [1](#1-nothing-is-downloaded-during-the-build) | Nothing is downloaded during the build | Build-history check |
 | [2](#2-vulnerable-bundled-libraries-are-replaced) | Vulnerable bundled libraries are replaced | Java findings 187 → 55 |
@@ -65,7 +65,7 @@ Full scan numbers: [scan-comparison.md](scan-comparison.md).
 | [9](#9-an-entrypoint-that-suits-red-hat-bases-and-does-not-leak) | An entrypoint that suits Red Hat bases and does not leak | Regular image fails to start |
 | [10](#10-spark-connect-does-not-log-client-requests) | Spark Connect does not log client requests | Log grep on the cluster |
 | [11](#11-less-spark) | Less Spark | 3 misconfigurations → 0 |
-| [12](#12-no-secrets-checked-rather-than-assumed) | No secrets, checked rather than assumed | Secret scan: 0 |
+| [12](#12-no-secrets) | No secrets | Secret scan: 0 |
 
 ### 1. Nothing is downloaded during the build
 
@@ -94,7 +94,7 @@ Full scan numbers: [scan-comparison.md](scan-comparison.md).
 > The build farm then needs no route to the internet. RPMs come from whichever repository the
 > builder is configured for: Red Hat CDN, Satellite or a mirror.
 
-**Evidence**
+**Result**
 
 ```
 regular:  FAIL build history
@@ -130,7 +130,7 @@ critical.
 | Guava | 33.7.2 |
 | JLine | 3.30.15 |
 
-**Evidence**
+**Result**
 
 - Java-library findings: 187 → 55 (Trivy).
 - Critical findings: 4 → 0.
@@ -156,7 +156,7 @@ The hardened flavour's final stage is `FROM scratch`. The builder stage assemble
 filesystem from only the RPMs Spark needs: bash, coreutils, grep, sed, gawk, procps,
 libstdc++, OpenJDK 21 headless and Python 3.12.
 
-**Evidence**
+**Result**
 
 OS findings 603 → 370 → 28. Which to pick: [choosing-a-base.md](choosing-a-base.md).
 
@@ -174,7 +174,7 @@ Anyone who gets a shell in the container can install software.
 - The UBI flavour has no `pip`. It keeps `microdnf`, `rpm` and `curl`, because they are part
   of the UBI minimal base.
 
-**Evidence**
+**Result**
 
 ```
 regular:  FAIL no pip / setuptools importable         pip, setuptools
@@ -194,7 +194,7 @@ them.
 
 The hardened flavour never installs them. The UBI flavour strips the bits.
 
-**Evidence**
+**Result**
 
 `FAIL no setuid/setgid binaries` (12 listed) → `PASS`.
 
@@ -226,7 +226,7 @@ ok
 touch: cannot touch '/opt/spark/jars/evil.jar': Permission denied
 ```
 
-**Evidence**
+**Result**
 
 Two `verify-image.sh` checks fail on the regular image and pass on ours: `read-only for the
 runtime user` and `work-dir is writable through group 0 only`.
@@ -245,10 +245,10 @@ manifests hard-code `runAsUser: 185`, which `restricted-v2` rejects.
   dropped.
 - No manifest in this repo sets `runAsUser` or `runAsGroup`.
 
-**Evidence**
+**Result**
 
 On the OpenShift cluster every Spark pod was admitted by `restricted-v2` and ran as UID
-`1000770000`, taken from the namespace's range: [evidence/](evidence/).
+`1000770000`, taken from the namespace's range: [logs](results/openshift/).
 
 ### 8. Read-only root filesystem
 
@@ -263,7 +263,7 @@ the home directory.
 those to `/tmp`: `SPARK_LOG_DIR`, `SPARK_PID_DIR`, Ivy and the warehouse. Pods can set
 `readOnlyRootFilesystem: true` with an `emptyDir` on `/tmp`.
 
-**Evidence**
+**Result**
 
 Every local test runs with `--read-only --cap-drop=ALL --security-opt=no-new-privileges`
 (`tests/smoke-local.sh`, 11 / 11).
@@ -275,7 +275,7 @@ Every local test runs with `--read-only --cap-drop=ALL --security-opt=no-new-pri
 Upstream's `entrypoint.sh` starts with `set -ex` and ends with `exec tini`.
 
 - `set -x` echoes every `--conf` value into the pod log. Those can be credentials.
-- `tini` is not shipped as a Red Hat RPM, so the regular image does not even start:
+- `tini` is not shipped as a Red Hat RPM, so the regular image does not start:
 
 ```
 $ podman run --rm spark-regular-ubi9:4.2.1 /opt/spark/bin/run-example SparkPi 10
@@ -295,7 +295,7 @@ The usual fix is to download a `tini` binary from GitHub during the build.
 
 Spark Connect logs whole client requests at INFO. A JDBC read carries its options in the
 request, so the database password appears in the server's pod log. The cluster security test
-found exactly that.
+caught this.
 
 **After**
 
@@ -305,7 +305,7 @@ at WARN.
 > [!IMPORTANT]
 > If you mount your own `SPARK_CONF_DIR`, keep those four lines.
 
-**Evidence**
+**Result**
 
 `tests/security-cluster.sh` greps every Spark pod log for every value in the credentials
 Secret:
@@ -325,7 +325,7 @@ Dockerfiles. Trivy reports the Dockerfiles as three misconfigurations.
 
 Pruned in `assemble.sh`. What remains is what a driver, an executor or a Connect server uses.
 
-### 12. No secrets, checked rather than assumed
+### 12. No secrets
 
 Neither build embeds a secret. The difference is that this repo checks:
 
@@ -365,7 +365,7 @@ Run them with `hack/verify-image.sh <image>`.
 ¹ On RHEL-based images this check tolerates `dnf`/`microdnf`, `rpm` and `curl`, because UBI
 ships them. Only the hardened flavour is free of them.
 
-Raw output: [evidence/image-checks/](evidence/image-checks/).
+Output: [results/image-checks/](results/image-checks/).
 
 ---
 

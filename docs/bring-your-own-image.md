@@ -27,7 +27,7 @@
 | OS packages | 78 | 139 | 265 |
 | Hardening checks passed | 16 / 16 | 16 / 16 | 7 / 16 |
 | S3 and JDBC libraries included | yes | yes | no |
-| Runs on OpenShift AI with no changes | yes | yes | no: [5 / 9](evidence/openshift/dockerhub-4.2.1-operator.log), both batch jobs fail |
+| Runs on OpenShift AI with no changes | yes | yes | no: [5 / 9](results/openshift/dockerhub-4.2.1-operator.log), both batch jobs fail |
 | Who patches the base | Red Hat | Red Hat | Apache community / Ubuntu |
 | **Pick this if** | You want the fewest findings and your scanner recognises the base | Your scanner or policy needs RHEL 9 | You are experimenting outside OpenShift |
 

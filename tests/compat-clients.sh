@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Client compatibility: run several pyspark-client versions against the running SparkConnect
 # server, from a pod that uses the OpenShift AI workbench image (so pip resolves against the
-# same index a real workbench uses).
+# same index a workbench uses).
 #
 # Usage: tests/compat-clients.sh [client ...]
 #   client = <version>        install from the workbench image's default index (Red Hat's)

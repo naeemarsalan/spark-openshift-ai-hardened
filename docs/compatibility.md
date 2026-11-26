@@ -5,10 +5,9 @@
 >
 > - Four Spark versions were built and run on OpenShift AI 3.5.4: **4.0.5, 4.1.4, 4.2.1
 >   (default) and 4.3.0**.
-> - Every cell below is a test that was run. Each one links to its log. Combinations that were
->   not run say **not tested**.
-> - This is a test report, not a support statement. For what Red Hat supports, check Red
->   Hat's supported-configurations page for your OpenShift AI version.
+> - Each result links to its log.
+> - These are test results. For what Red Hat supports, check Red Hat's
+>   supported-configurations page for your OpenShift AI version.
 
 **On this page**
 
@@ -36,10 +35,10 @@ Hardened image, OpenShift 4.20.27, OpenShift AI 3.5.4, `restricted-v2`, no SCC g
 
 | Spark | Image tag | Hardening checks | Local functional | Operator | Without the operator |
 |---|---|---|---|---|---|
-| 4.0.5 | `spark-hi:4.0.5-2` | ✅ [16 / 16](evidence/image-checks/verify-spark-hi-4.0.5.txt) | ✅ [11 / 11](evidence/compat/4.0.5-local-smoke.log) | ✅ [9 / 9](evidence/compat/4.0.5-operator.log) | ✅ [8 / 8](evidence/compat/4.0.5-native.log) |
-| 4.1.4 | `spark-hi:4.1.4-2` | ✅ [16 / 16](evidence/image-checks/verify-spark-hi-4.1.4.txt) | ✅ [11 / 11](evidence/compat/4.1.4-local-smoke.log) | ✅ [9 / 9](evidence/compat/4.1.4-operator.log) | ✅ [8 / 8](evidence/compat/4.1.4-native.log) |
-| **4.2.1** (default) | `spark-hi:4.2.1-2` | ✅ [16 / 16](evidence/image-checks/verify-spark-hi-4.2.1.txt) | ✅ [11 / 11](evidence/local/smoke-spark-hi.log) | ✅ [9 / 9](evidence/openshift/4.2.1-hi-operator.log) | ✅ [8 / 8](evidence/openshift/4.2.1-hi-native.log) |
-| 4.3.0 | `spark-hi:4.3.0-4` | ✅ [16 / 16](evidence/image-checks/verify-spark-hi-4.3.0.txt) | ✅ [11 / 11](evidence/compat/4.3.0-local-smoke.log) | ✅ [9 / 9](evidence/compat/4.3.0-operator.log) | ✅ [8 / 8](evidence/compat/4.3.0-native.log) |
+| 4.0.5 | `spark-hi:4.0.5-2` | ✅ [16 / 16](results/image-checks/verify-spark-hi-4.0.5.txt) | ✅ [11 / 11](results/compat/4.0.5-local-smoke.log) | ✅ [9 / 9](results/compat/4.0.5-operator.log) | ✅ [8 / 8](results/compat/4.0.5-native.log) |
+| 4.1.4 | `spark-hi:4.1.4-2` | ✅ [16 / 16](results/image-checks/verify-spark-hi-4.1.4.txt) | ✅ [11 / 11](results/compat/4.1.4-local-smoke.log) | ✅ [9 / 9](results/compat/4.1.4-operator.log) | ✅ [8 / 8](results/compat/4.1.4-native.log) |
+| **4.2.1** (default) | `spark-hi:4.2.1-2` | ✅ [16 / 16](results/image-checks/verify-spark-hi-4.2.1.txt) | ✅ [11 / 11](results/local/smoke-spark-hi.log) | ✅ [9 / 9](results/openshift/4.2.1-hi-operator.log) | ✅ [8 / 8](results/openshift/4.2.1-hi-native.log) |
+| 4.3.0 | `spark-hi:4.3.0-4` | ✅ [16 / 16](results/image-checks/verify-spark-hi-4.3.0.txt) | ✅ [11 / 11](results/compat/4.3.0-local-smoke.log) | ✅ [9 / 9](results/compat/4.3.0-operator.log) | ✅ [8 / 8](results/compat/4.3.0-native.log) |
 
 **What each column runs**
 
@@ -51,7 +50,7 @@ Hardened image, OpenShift 4.20.27, OpenShift AI 3.5.4, `restricted-v2`, no SCC g
 | Without the operator | `tests/cluster-test.sh` | `spark-submit` in cluster mode from a Job, and a Spark Connect Deployment |
 
 The default version was also run on the UBI 9 base, with the example pipeline, the security
-tests and a real workbench notebook: [openshift-ai.md](openshift-ai.md#results).
+tests and a workbench notebook: [openshift-ai.md](openshift-ai.md#results).
 
 ## Notebook client against server
 
@@ -64,13 +63,13 @@ default; PyPI needs `--index-url`.
 
 | `pyspark-client` | Source | Server 4.0.5 | Server 4.1.4 | Server 4.2.1 | Server 4.3.0 |
 |---|---|---|---|---|---|
-| 4.0.1 | Red Hat's index | ✅ [pass](evidence/compat/4.0.5-clients.log) | ✅ [pass](evidence/compat/4.1.4-clients.log) | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) | ✅ [pass](evidence/compat/4.3.0-clients.log) |
-| 4.1.2 | Red Hat's index | ✅ [pass](evidence/compat/4.0.5-clients.log) | ✅ [pass](evidence/compat/4.1.4-clients.log) | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) | ✅ [pass](evidence/compat/4.3.0-clients.log) |
-| 4.2.0 | Red Hat's index | ✅ [pass](evidence/compat/4.0.5-clients.log) | ✅ [pass](evidence/compat/4.1.4-clients.log) | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) | ✅ [pass](evidence/compat/4.3.0-clients.log) |
-| 4.0.5 | PyPI | ✅ [pass](evidence/compat/4.0.5-clients.log) | ✅ [pass](evidence/compat/4.1.4-clients.log) | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) | ✅ [pass](evidence/compat/4.3.0-clients.log) |
-| 4.1.4 | PyPI | ✅ [pass](evidence/compat/4.0.5-clients.log) | ✅ [pass](evidence/compat/4.1.4-clients.log) | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) | ✅ [pass](evidence/compat/4.3.0-clients.log) |
-| 4.2.1 | PyPI | ✅ [pass](evidence/compat/4.0.5-clients.log) | ✅ [pass](evidence/compat/4.1.4-clients.log) | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) | ✅ [pass](evidence/compat/4.3.0-clients.log) |
-| 4.3.0 | PyPI | ✅ [pass](evidence/compat/4.0.5-clients.log) | ✅ [pass](evidence/compat/4.1.4-clients.log) | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) | ✅ [pass](evidence/compat/4.3.0-clients.log) |
+| 4.0.1 | Red Hat's index | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
+| 4.1.2 | Red Hat's index | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
+| 4.2.0 | Red Hat's index | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
+| 4.0.5 | PyPI | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
+| 4.1.4 | PyPI | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
+| 4.2.1 | PyPI | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
+| 4.3.0 | PyPI | ✅ [pass](results/compat/4.0.5-clients.log) | ✅ [pass](results/compat/4.1.4-clients.log) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) | ✅ [pass](results/compat/4.3.0-clients.log) |
 
 > [!TIP]
 > In a workbench, `%pip install "pyspark-client>=4.2,<4.3"` gets 4.2.0 from Red Hat's index

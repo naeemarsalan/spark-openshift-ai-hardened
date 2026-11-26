@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Execute examples/03-spark-connect/workbench.ipynb inside a real OpenShift AI workbench pod,
+# Execute examples/03-spark-connect/workbench.ipynb inside an OpenShift AI workbench pod,
 # against the SparkConnect server in the current project.
 #
 # Usage: tests/workbench-test.sh <workbench-namespace> <workbench-pod> [pip args for the client]

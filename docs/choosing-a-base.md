@@ -7,7 +7,7 @@
 >   against 370 on UBI 9.
 > - **Check one thing first:** that your scanner recognises Red Hat Hardened Images.
 > - **It does not, or you need a RHEL 9 benchmark or a fixed OS version?** Use `spark-ubi9`.
-> - **Not sure?** Scan both with your scanner first. That answers it.
+> - **Not sure?** Scan both with your own scanner.
 >
 > The Spark layer and all the hardening in [hardening.md](hardening.md) are the same on both.
 
@@ -19,8 +19,8 @@
 4. Otherwise use `spark-hi`.
 
 > [!WARNING]
-> A scanner that does not recognise the distribution reports **zero OS findings**. That looks
-> like a pass and is not one. Trivy 0.76.2 does exactly this with the hardened base.
+> A scanner that does not recognise the distribution reports **zero OS findings**. It looks
+> like a pass. Trivy 0.76.2 does this with the hardened base.
 
 ## Side by side
 
@@ -47,7 +47,6 @@ The Docker Hub image is the third starting point. It is compared in
 
 - **You want the lowest finding count.** Fewer packages, and newer ones.
 - **You want the smallest attack surface.** No package manager, no `curl`, no setuid programs.
-  They were never installed, rather than installed and then stripped.
 - **Your scanner understands it.** Check this first.
 
 ## Use UBI 9 when
@@ -68,7 +67,7 @@ The Docker Hub image is the third starting point. It is compared in
 | **A rolling base** | Pin the builder image by digest and rebuild on a schedule. Do not track a floating tag in production. |
 | **Scanner support** | Trivy 0.76.2 skipped its RPMs entirely. Grype 0.122.1 handled them. Try your own scanner before you decide. |
 | **A slightly unusual build** | There is no ready-made runtime image to start `FROM`. The builder installs RPMs into a directory and the final stage copies it into `scratch`: about ten extra lines. The release package must be installed, or scanners cannot identify the OS at all. |
-| **No fallback tools** | `nss_wrapper` is not available, so the image relies on the container runtime to supply a passwd entry for the assigned UID. CRI-O on OpenShift does. This is verified on a real cluster. |
+| **No fallback tools** | `nss_wrapper` is not available, so the image relies on the container runtime to supply a passwd entry for the assigned UID. CRI-O on OpenShift does (tested on OpenShift 4.20). |
 
 ## What neither base changes
 
@@ -76,10 +75,10 @@ The base does nothing for the **55 Java-library findings**. They are inside Spar
 own dependencies and are identical on both. Neither base reaches zero OS findings either,
 because none of the remaining ones has a fixed package to move to.
 
-That is expected. The aim is the safer starting point, not zero. What is left and why:
+What is left and why:
 [scan-comparison.md](scan-comparison.md#what-is-left).
 
-## Not verified
+## Check before you adopt it
 
 - The support and subscription terms of Red Hat Hardened Images.
 - Whether FIPS-validated variants exist for the packages used here.

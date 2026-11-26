@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prove each bundled JDBC driver against a REAL database engine (podman, Spark local mode).
+# Test each bundled JDBC driver against a database engine (podman, Spark local mode).
 # PostgreSQL is already covered by smoke-local.sh; this adds SQL Server, and Oracle when the
 # image was built with the optional Oracle driver (see image/jars.txt).
 #

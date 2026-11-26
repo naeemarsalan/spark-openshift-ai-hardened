@@ -1,8 +1,8 @@
 # Apache Spark on OpenShift AI: bring your own hardened image
 
 How to run Apache Spark with Red Hat OpenShift AI: what the platform gives you, what you have
-to bring, and how to build the one thing it does not ship, a Spark image. Everything here was
-run on a real cluster, and every number links to the output behind it.
+to bring, and how to build the one thing it does not ship, a Spark image. Tested on
+OpenShift 4.20 with OpenShift AI 3.5.4.
 
 > [!NOTE]
 > **In short**
@@ -41,7 +41,7 @@ run on a real cluster, and every number links to the output behind it.
 | Know what the hardening changed | [docs/hardening.md](docs/hardening.md) |
 | See scan numbers before and after | [docs/scan-comparison.md](docs/scan-comparison.md) |
 | Run it on OpenShift AI, or fix a job that fails there | [docs/openshift-ai.md](docs/openshift-ai.md) |
-| Check the raw output behind a number | [docs/evidence/](docs/evidence/) |
+| Read the test logs and scan reports | [docs/results/](docs/results/) |
 
 ## What is in the image
 
@@ -144,7 +144,7 @@ Use the controls on the diagram to zoom, pan or open it full screen.
 - `make test` ends with `== 11 passed, 0 failed`.
 - `make scan` writes `reports/<image>/summary.md`.
 
-Want the before-and-after on your own machine? Run `make compare`. It builds the regular UBI
+To compare with a regular UBI build, run `make compare`. It builds the regular UBI
 image and runs the same checks and scans against both.
 
 ## Quick start: run on OpenShift AI
@@ -225,9 +225,8 @@ The same Spark 4.2.1 from four sources. Scanned 2026-11-26.
 ¹ Trivy does not recognise the hardened base's operating system and skips its packages. That
 number is Java libraries only. Use the Grype row to compare.
 
-The findings that remain have no drop-in fix today. The goal here is an image that is **safer
-by default**, not a scanner report that reads zero.
-[What is left and why](docs/scan-comparison.md#what-is-left).
+The findings that remain have no fixed release to move to yet:
+[what is left and why](docs/scan-comparison.md#what-is-left).
 
 ### Tests on OpenShift AI
 
@@ -235,16 +234,16 @@ OpenShift 4.20.27, OpenShift AI 3.5.4, Spark 4.2.1, 2026-11-26. [Details](docs/o
 
 | Test | `spark-hi` | `spark-ubi9` |
 |---|---|---|
-| Operator: `SparkApplication` and `SparkConnect` | ✅ [9 / 9](docs/evidence/openshift/4.2.1-hi-operator.log) | ✅ [9 / 9](docs/evidence/openshift/4.2.1-ubi9-operator.log) |
-| Example pipeline through the operator | ✅ [5 / 5](docs/evidence/openshift/4.2.1-hi-examples.log) | ✅ [5 / 5](docs/evidence/openshift/4.2.1-ubi9-examples.log) |
-| Cluster security: NetworkPolicy, RBAC, credentials | ✅ [10 / 10](docs/evidence/openshift/4.2.1-hi-security.log) | ✅ [10 / 10](docs/evidence/openshift/4.2.1-ubi9-security.log) |
-| `spark-submit` without the operator | ✅ [8 / 8](docs/evidence/openshift/4.2.1-hi-native.log) | ✅ [8 / 8](docs/evidence/openshift/4.2.1-ubi9-native.log) |
-| Notebook clients, 7 versions | ✅ [7 / 7](docs/evidence/openshift/4.2.1-hi-clients.log) | ✅ [7 / 7](docs/evidence/openshift/4.2.1-ubi9-clients.log) |
-| Notebook in a real workbench | ✅ [1 / 1](docs/evidence/openshift/4.2.1-hi-workbench.log) | ✅ [1 / 1](docs/evidence/openshift/4.2.1-ubi9-workbench.log) |
+| Operator: `SparkApplication` and `SparkConnect` | ✅ [9 / 9](docs/results/openshift/4.2.1-hi-operator.log) | ✅ [9 / 9](docs/results/openshift/4.2.1-ubi9-operator.log) |
+| Example pipeline through the operator | ✅ [5 / 5](docs/results/openshift/4.2.1-hi-examples.log) | ✅ [5 / 5](docs/results/openshift/4.2.1-ubi9-examples.log) |
+| Cluster security: NetworkPolicy, RBAC, credentials | ✅ [10 / 10](docs/results/openshift/4.2.1-hi-security.log) | ✅ [10 / 10](docs/results/openshift/4.2.1-ubi9-security.log) |
+| `spark-submit` without the operator | ✅ [8 / 8](docs/results/openshift/4.2.1-hi-native.log) | ✅ [8 / 8](docs/results/openshift/4.2.1-ubi9-native.log) |
+| Notebook clients, 7 versions | ✅ [7 / 7](docs/results/openshift/4.2.1-hi-clients.log) | ✅ [7 / 7](docs/results/openshift/4.2.1-ubi9-clients.log) |
+| Notebook in a workbench | ✅ [1 / 1](docs/results/openshift/4.2.1-hi-workbench.log) | ✅ [1 / 1](docs/results/openshift/4.2.1-ubi9-workbench.log) |
 
 ### Spark versions tested
 
-Hardened image, same cluster. Every cell links to its log in
+Hardened image, same cluster. Logs and the client matrix:
 [docs/compatibility.md](docs/compatibility.md).
 
 | Spark | Operator | `spark-submit` without the operator | Notebook clients passing |
@@ -256,7 +255,7 @@ Hardened image, same cluster. Every cell links to its log in
 
 ## Requirement checklist
 
-| | Requirement | How it is met | Proof |
+| | Requirement | How it is met | Checked by |
 |---|---|---|---|
 | ✅ | Spark Connect and `spark-submit` | [`image/entrypoint.sh`](image/entrypoint.sh) modes `driver`, `executor`, `connect` | Operator test 9 / 9 |
 | ✅ | Scala and Python executors | One image with the JVM, Python 3.12 and the Arrow stack | Scala SparkPi and a PySpark pandas UDF on the cluster |
@@ -283,7 +282,7 @@ tests/                  local and cluster tests
 deploy/openshift-ai/    SparkApplication, SparkConnect, RBAC and NetworkPolicy for OpenShift AI
 deploy/                 the same without the operator (plain spark-submit)
 examples/               three example projects and their manifests
-docs/                   the guide and the evidence
+docs/                   the guide, test logs and scan reports
 ```
 
 ## Choices made in this repo
@@ -300,12 +299,9 @@ Change any of them for your own build.
 
 ## Not covered
 
-- Which Spark versions Red Hat **supports**. This repo reports what was tested. Check Red
-  Hat's supported-configurations page for your OpenShift AI version.
-- The Spark Operator's support status in OpenShift AI 3.5 (generally available or Technology
-  Preview) is unconfirmed.
-- Red Hat's published Spark Operator documentation was not read directly. The manifests follow
-  the examples in Red Hat's operator source repository.
+- Which Spark versions Red Hat **supports**, and whether the Spark Operator is generally
+  available or Technology Preview in your OpenShift AI version. Check Red Hat's
+  supported-configurations page.
 - Spark 3.5, disconnected clusters, FIPS mode, and architectures other than x86_64.
 - Support and licensing terms of Red Hat Hardened Images.
 

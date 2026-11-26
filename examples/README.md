@@ -1,11 +1,11 @@
 # Example projects
 
 > [!NOTE]
-> **In short:** a three-stage pipeline that exercises everything the image is meant to do.
+> **In short:** a three-stage pipeline covering PySpark, Scala and Spark Connect.
 > One command runs it locally, one runs it on a cluster. Each stage checks its own result and
 > the runner fails if a stage does not report success.
 
-| # | Project | Language / mode | What it proves |
+| # | Project | Language / mode | What it covers |
 |---|---|---|---|
 | 1 | [`01-pyspark-etl`](01-pyspark-etl/etl.py) | PySpark, `spark-submit` | S3A read/write (CSV + partitioned Parquet), pandas UDF on Python executors, JDBC load, S3-vs-database reconciliation |
 | 2 | [`02-scala-report`](02-scala-report/src/main/scala/com/example/report/CategoryReport.scala) | Scala, `spark-submit --class` | Compiled Scala on executors (typed Dataset, window functions), S3 read, JDBC write |
@@ -41,7 +41,7 @@ examples/run-cluster.sh oci.arsalan.io/spark/spark-hi:4.2.1-2 oci.arsalan.io/spa
 
 `run-cluster.sh` submits stages 1 and 2 as `SparkApplication` resources
 ([`openshift-ai/`](openshift-ai/)), and runs stage 3 from a pod against the `SparkConnect`
-server. The real workbench version of stage 3 is
+server. The workbench version of stage 3 is
 [`03-spark-connect/workbench.ipynb`](03-spark-connect/workbench.ipynb).
 
 Configuration and credentials always come from the `spark-datasources` Secret:

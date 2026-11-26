@@ -6,8 +6,7 @@
 > - The hardened image is **safer by default**: 92 findings, against 793 for a
 >   regular UBI 9 build and 1,279 for the Docker Hub image (Grype).
 > - Critical findings (Trivy): 4 in the regular build, 0 here.
-> - The goal is fewer findings and a smaller attack surface, not a report that reads zero.
->   What is left has no drop-in fix today, and is [listed below](#what-is-left).
+> - What is left has no fixed release yet. It is [listed below](#what-is-left).
 > - Trivy cannot see the hardened base's OS packages. Compare that image with Grype.
 
 **On this page**
@@ -38,7 +37,7 @@ make compare              # B next to your own build
 ```
 
 The per-CVE list lands in `reports/<image>/summary.md`. The lists behind this page are in
-[evidence/scans/](evidence/scans/).
+[results/scans/](results/scans/).
 
 ## Headline
 
@@ -60,8 +59,8 @@ The per-CVE list lands in `reports/<image>/summary.md`. The lists behind this pa
 > with the others. `hack/scan.sh` prints a warning whenever a scanner fails to identify the OS.
 
 ² The regular build is this large because `chown -R` after unpacking copies the whole Spark
-distribution into a second layer, and nothing is pruned. It is a common mistake, left in on
-purpose.
+distribution into a second layer, and nothing is pruned. It is a common mistake in hand-written
+Containerfiles.
 
 ## Where the findings are
 
@@ -106,8 +105,7 @@ Splitting each total into OS packages and Java libraries shows which change fixe
 
 ## What is left
 
-The hardened image is not at zero, and it does not need to be for the point to hold: it
-starts from far fewer findings than the other three. What remains in C and D:
+What remains in C and D:
 
 | Where | Count (Trivy) | Why it is still there |
 |---|---|---|
@@ -115,12 +113,12 @@ starts from far fewer findings than the other three. What remains in C and D:
 | `parquet-jackson-1.17.1.jar` | 19 | Shaded Jackson. 1.17.1 is the newest Parquet release. |
 | `spark-core_2.13-4.2.1.jar` | 4 | Shaded Jetty 12. |
 | `spark-network-common_2.13-4.2.1.jar` | 1 | Shaded Guava. |
-| Hive 2.3 support jars (`libthrift`, `hive-exec`, `commons-lang`) | 4 | Needed for `enableHiveSupport()` and Hive Metastore. Kept on purpose. |
+| Hive 2.3 support jars (`libthrift`, `hive-exec`, `commons-lang`) | 4 | Needed for `enableHiveSupport()` and Hive Metastore. |
 | OS packages | 370 (C) / 28 (D, Grype) | No fixed RPM published. |
 
 This repo leaves them as they are. If your policy needs them closed, the options are to
 rebuild Spark and the Hadoop client from source, to drop Hive support, or to record an
-exception for each. Those are decisions for the image owner, outside the image build.
+exception for each.
 
 ## Older Spark versions
 

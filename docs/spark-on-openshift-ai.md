@@ -32,7 +32,7 @@ started with different arguments.
 
 ## What you get and what you bring
 
-**OpenShift AI gives you** (as observed on OpenShift AI 3.5.4):
+**OpenShift AI gives you** (OpenShift AI 3.5.4):
 
 | Item | Detail |
 |---|---|
@@ -73,15 +73,9 @@ started with different arguments.
 | Your jobs, data and credentials | You |
 
 > [!IMPORTANT]
-> **Claims this repo does not make**
->
-> - It is a worked example, not a Red Hat product and not a support statement.
-> - It does not say which Spark versions Red Hat supports. It says which versions were
->   **tested** and what happened: [compatibility.md](compatibility.md). For support, check
->   Red Hat's supported-configurations page for your OpenShift AI version or ask your account
->   team.
-> - The Spark Operator's support status in OpenShift AI 3.5 (generally available or Technology
->   Preview) was not confirmed.
+> This repo is an example, not a Red Hat product. For the Spark versions and operator features
+> Red Hat supports, check Red Hat's supported-configurations page for your OpenShift AI
+> version or ask your account team. Versions tested here: [compatibility.md](compatibility.md).
 
 ## Check before you start
 
@@ -109,7 +103,7 @@ started with different arguments.
 **Verification**
 
 Output for the hardened image on the test cluster
-([raw](evidence/openshift/preflight-spark-hi-4.2.1.log)):
+([full log](results/openshift/preflight-spark-hi-4.2.1.log)):
 
 ```
 == cluster
@@ -143,7 +137,7 @@ Output for the hardened image on the test cluster
 
 The one warning is expected on OpenShift AI and is explained in
 [openshift-ai.md](openshift-ai.md#1-pod-settings-must-go-in-pod-templates). The same check on the unmodified Docker Hub image ends with
-`1 failed`: [raw](evidence/openshift/preflight-dockerhub-4.2.1.log).
+`1 failed`: [full log](results/openshift/preflight-dockerhub-4.2.1.log).
 
 Every `FAIL` line comes with the command that fixes it.
 

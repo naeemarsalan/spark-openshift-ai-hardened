@@ -14,7 +14,7 @@
 - [Troubleshooting](#troubleshooting)
 - [Tested configuration](#tested-configuration)
 - [Results](#results)
-- [What `restricted-v2` enforces](#what-restricted-v2-enforces-as-observed)
+- [What `restricted-v2` enforces](#what-restricted-v2-enforces)
 - [Five things that differ from upstream documentation](#five-things-that-differ-from-upstream-documentation)
 - [Spark Connect access control](#spark-connect-access-control)
 - [Driver permissions](#driver-permissions)
@@ -30,7 +30,7 @@ Find your symptom, apply the fix.
 | Symptom | Cause | Fix |
 |---|---|---|
 | Job starts, then fails with a missing file, volume or environment variable (`can't open file '/jobs/...'`) | Flat pod fields are ignored outside the `default` namespace | Move them into `driver.template` and `executor.template`. [Point 1](#1-pod-settings-must-go-in-pod-templates) |
-| Pod is rejected at admission with a UID or SCC error | A manifest sets `runAsUser`, `runAsGroup` or `fsGroup` | Delete those fields. [Details](#what-restricted-v2-enforces-as-observed) |
+| Pod is rejected at admission with a UID or SCC error | A manifest sets `runAsUser`, `runAsGroup` or `fsGroup` | Delete those fields. [Details](#what-restricted-v2-enforces) |
 | Spark Connect server crash-loops | Executors try to reach the driver at `0.0.0.0` (Spark 4.2 and 4.3) | Set `spark.kubernetes.executor.useDriverPodIP: "false"`. [Point 2](#2-executors-cannot-reach-an-operator-managed-spark-connect-server) |
 | `pip install pyspark-client==4.2.1` fails in a workbench | Red Hat's index offers 4.0.1, 4.1.2 and 4.2.0 only | Install `pyspark-client>=4.2,<4.3`. [Point 4](#4-workbenches-install-python-packages-from-red-hats-index) |
 | `spark-submit` fails with `networkpolicies ... is forbidden` | Spark 4.2 and 4.3 create a NetworkPolicy per application | Exclude `NetworkPolicyFeatureStep`. [Point 5](#5-spark-submit-creates-a-networkpolicy-per-application) |
@@ -48,19 +48,19 @@ Find your symptom, apply the fix.
 | Namespace | Ordinary project, **no SCC granted** to any service account |
 | Date | 2026-11-26 |
 
-Captured cluster state: [evidence/openshift/00-cluster-2026-11-25.txt](evidence/openshift/00-cluster-2026-11-25.txt).
+Cluster details: [00-cluster-2026-11-25.txt](results/openshift/00-cluster-2026-11-25.txt).
 Other Spark versions on the same cluster: [compatibility.md](compatibility.md).
 
 ## Results
 
 | Test | `spark-hi` | `spark-ubi9` |
 |---|---|---|
-| `tests/cluster-test-openshift-ai.sh` | ✅ [9 / 9](evidence/openshift/4.2.1-hi-operator.log) | ✅ [9 / 9](evidence/openshift/4.2.1-ubi9-operator.log) |
-| `examples/run-cluster.sh` | ✅ [5 / 5](evidence/openshift/4.2.1-hi-examples.log) | ✅ [5 / 5](evidence/openshift/4.2.1-ubi9-examples.log) ¹ |
-| `tests/security-cluster.sh` | ✅ [10 / 10](evidence/openshift/4.2.1-hi-security.log) | ✅ [10 / 10](evidence/openshift/4.2.1-ubi9-security.log) |
-| `tests/cluster-test.sh` | ✅ [8 / 8](evidence/openshift/4.2.1-hi-native.log) | ✅ [8 / 8](evidence/openshift/4.2.1-ubi9-native.log) |
-| `tests/compat-clients.sh` | ✅ [7 / 7](evidence/openshift/4.2.1-hi-clients.log) | ✅ [7 / 7](evidence/openshift/4.2.1-ubi9-clients.log) |
-| `tests/workbench-test.sh` ² | ✅ [pass](evidence/openshift/4.2.1-hi-workbench.log) | ✅ [pass](evidence/openshift/4.2.1-ubi9-workbench.log) |
+| `tests/cluster-test-openshift-ai.sh` | ✅ [9 / 9](results/openshift/4.2.1-hi-operator.log) | ✅ [9 / 9](results/openshift/4.2.1-ubi9-operator.log) |
+| `examples/run-cluster.sh` | ✅ [5 / 5](results/openshift/4.2.1-hi-examples.log) | ✅ [5 / 5](results/openshift/4.2.1-ubi9-examples.log) ¹ |
+| `tests/security-cluster.sh` | ✅ [10 / 10](results/openshift/4.2.1-hi-security.log) | ✅ [10 / 10](results/openshift/4.2.1-ubi9-security.log) |
+| `tests/cluster-test.sh` | ✅ [8 / 8](results/openshift/4.2.1-hi-native.log) | ✅ [8 / 8](results/openshift/4.2.1-ubi9-native.log) |
+| `tests/compat-clients.sh` | ✅ [7 / 7](results/openshift/4.2.1-hi-clients.log) | ✅ [7 / 7](results/openshift/4.2.1-ubi9-clients.log) |
+| `tests/workbench-test.sh` ² | ✅ [pass](results/openshift/4.2.1-hi-workbench.log) | ✅ [pass](results/openshift/4.2.1-ubi9-workbench.log) |
 
 **What each test covers**
 
@@ -71,7 +71,7 @@ Other Spark versions on the same cluster: [compatibility.md](compatibility.md).
 | `security-cluster.sh` | NetworkPolicy allow and deny cases; driver RBAC; credentials absent from every spec and every pod log |
 | `cluster-test.sh` | The same without the operator: `spark-submit` in cluster mode from a Job, and a Spark Connect Deployment |
 | `compat-clients.sh` | Seven `pyspark-client` versions, each running a pandas UDF, S3 and JDBC through the server |
-| `workbench-test.sh` | `workbench.ipynb` executed top to bottom inside a real OpenShift AI workbench pod against the `SparkConnect` server |
+| `workbench-test.sh` | `workbench.ipynb` executed top to bottom inside an OpenShift AI workbench pod against the `SparkConnect` server |
 
 ¹ Spark Connect server on `spark-ubi9`. The two batch jobs use the `spark-examples` image,
 which is built on `spark-hi`.
@@ -83,7 +83,7 @@ client versions are covered by `compat-clients.sh`.
 
 | Test | `docker.io/apache/spark:4.2.1` |
 |---|---|
-| `tests/cluster-test-openshift-ai.sh` | ❌ [5 / 9](evidence/openshift/dockerhub-4.2.1-operator.log) |
+| `tests/cluster-test-openshift-ai.sh` | ❌ [5 / 9](results/openshift/dockerhub-4.2.1-operator.log) |
 
 - Every pod was admitted by `restricted-v2`, and the Spark Connect server started.
 - Both `SparkApplication` jobs failed. The first error is
@@ -94,12 +94,11 @@ client versions are covered by `compat-clients.sh`.
 Why, and what to use instead: [bring-your-own-image.md](bring-your-own-image.md#three-starting-points).
 
 > [!NOTE]
-> The first ever run of the operator test (with Spark 4.3.0) had one failure, kept as
-> [evidence](evidence/openshift/first-run-4.3.0-operator-1-failure.log). It was a real
-> difference between OpenShift AI and the upstream operator:
+> The first run of the operator test (with Spark 4.3.0) had
+> [one failure](results/openshift/first-run-4.3.0-operator-1-failure.log), caused by
 > [point 1](#1-pod-settings-must-go-in-pod-templates).
 
-## What `restricted-v2` enforces, as observed
+## What `restricted-v2` enforces
 
 **Every Spark pod, with no SCC granted:**
 
@@ -251,13 +250,13 @@ ERROR: Could not find a version that satisfies the requirement pyspark-client==4
 4.2.0 on Red Hat's index.
 
 Seven client versions were tested against each server version, and the whole notebook was run
-from a real workbench (S3 read, pandas UDF on the executors, Spark SQL, JDBC read):
+from a workbench (S3 read, pandas UDF on the executors, Spark SQL, JDBC read):
 
 | Client | Source | Result against the 4.2.1 server |
 |---|---|---|
-| `pyspark-client` 4.0.1, 4.1.2, 4.2.0 | Red Hat's index (workbench default) | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) |
-| `pyspark-client` 4.0.5, 4.1.4, 4.2.1, 4.3.0 | `--index-url https://pypi.org/simple` | ✅ [pass](evidence/openshift/4.2.1-hi-clients.log) |
-| Notebook in a workbench, client 4.2.0 | Red Hat's index | ✅ [pass](evidence/openshift/4.2.1-hi-workbench.log) |
+| `pyspark-client` 4.0.1, 4.1.2, 4.2.0 | Red Hat's index (workbench default) | ✅ [pass](results/openshift/4.2.1-hi-clients.log) |
+| `pyspark-client` 4.0.5, 4.1.4, 4.2.1, 4.3.0 | `--index-url https://pypi.org/simple` | ✅ [pass](results/openshift/4.2.1-hi-clients.log) |
+| Notebook in a workbench, client 4.2.0 | Red Hat's index | ✅ [pass](results/openshift/4.2.1-hi-workbench.log) |
 
 Full client and server matrix: [compatibility.md](compatibility.md#notebook-client-against-server).
 
@@ -305,9 +304,8 @@ namespace.
 
 A workbench pod is one with the label `opendatahub.io/workbenches=true`, in a namespace
 labelled `opendatahub.io/dashboard=true`. The workbench controller sets the pod label itself.
-This is confirmed on the cluster.
 
-**Tested on the cluster:**
+**Test output:**
 
 ```
 PASS same namespace can reach Spark Connect
@@ -364,8 +362,8 @@ Short copy-paste version: [`deploy/openshift-ai/workbench-notebook.md`](../deplo
 
 ## Not covered
 
-- The Spark Operator's support status in OpenShift AI 3.5 (generally available or Technology
-  Preview) was not confirmed from Red Hat's documentation.
+- Whether the Spark Operator is generally available or Technology Preview in your OpenShift
+  AI version. Check Red Hat's documentation.
 - A disconnected cluster, a cluster-wide proxy, and FIPS mode.
 - Architectures other than x86_64.
 - Spark Connect behind a Route with TLS on the cluster. The token and TLS pattern is tested
@@ -390,7 +388,7 @@ Compared with the examples in Red Hat's operator source,
 ## Rehearsing without OpenShift
 
 The cluster scripts also run on a local `kind` cluster with the upstream Kubeflow Spark
-Operator. That is how the manifests were developed. The scripts detect plain Kubernetes and
+Operator. The scripts detect plain Kubernetes and
 check the *restricted* Pod Security Standard instead of the SCC.
 
 <details>
@@ -412,9 +410,9 @@ tests/cluster-test-openshift-ai.sh <image>
 </details>
 
 > [!WARNING]
-> kind proves the manifests and the operator integration. It does not prove `restricted-v2`.
-> Points 1 and 4 above only showed up on real OpenShift AI.
+> kind tests the manifests and the operator integration, not `restricted-v2`. Points 1 and 4
+> above appear only on OpenShift AI.
 
 ---
 
-**Next:** [compatibility](compatibility.md) · [walkthrough](walkthrough.md) · [evidence](evidence/)
+**Next:** [compatibility](compatibility.md) · [walkthrough](walkthrough.md) · [test logs](results/)

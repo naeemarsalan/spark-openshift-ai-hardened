@@ -6,7 +6,7 @@
 #   tests/cluster-test-openshift-ai.sh <image-pullable-by-the-cluster> [--cleanup]
 #
 # Needs: DataScienceCluster with the Spark Operator component Managed, and the operator
-# watching this namespace. Proves, with the custom image:
+# watching this namespace. Checks, with the custom image:
 #   * SparkApplication (Scala) and SparkApplication (PySpark, S3A + JDBC) complete
 #   * SparkConnect CR brings up a server + executors; a Python client can use it
 #   * every Spark pod is admitted by restricted-v2 with a namespace-assigned UID

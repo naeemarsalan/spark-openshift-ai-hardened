@@ -5,7 +5,7 @@
 #   oc login ...; oc new-project spark-demo        # a normal project, no extra SCC grants
 #   tests/cluster-test.sh <image-pullable-by-the-cluster> [--cleanup]
 #
-# What it proves:
+# What it covers:
 #   * every Spark pod (submitter, driver, executors, Connect server) is admitted by restricted-v2
 #     and runs as a namespace-assigned UID (not root, not the image's 1001)
 #   * spark-submit cluster mode: Scala job, PySpark job, S3A + JDBC round-trip

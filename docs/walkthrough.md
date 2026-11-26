@@ -2,7 +2,7 @@
 
 > [!NOTE]
 > **In short:** eleven steps, one command each. Steps 1 to 7 need a build machine. Steps 8 to
-> 10 need a cluster. Every step prints its own pass or fail, so you never judge output by eye.
+> 10 need a cluster. Every step prints a pass or fail count.
 
 | Step | What you do | Where |
 |---|---|---|
@@ -145,7 +145,7 @@ run as containers, so there is nothing to install.
 > [!TIP]
 > To use the scan as a pipeline gate, run `hack/scan.sh <image> --fail`.
 
-**Optional: see what the hardening bought you**
+**Optional: compare with a regular build**
 
 ```bash
 make compare
@@ -163,7 +163,7 @@ Run these one at a time.
 ```bash
 make test                          # 11 functional checks + operator launch emulation
 tests/security-local.sh <image>    # Spark Connect token and TLS, secrets hygiene
-tests/jdbc-drivers.sh <image>      # round-trips against real PostgreSQL and SQL Server (and Oracle, if you added its driver)
+tests/jdbc-drivers.sh <image>      # round-trips against PostgreSQL and SQL Server (and Oracle, if you added its driver)
 examples/run-local.sh              # the three example projects
 ```
 
@@ -233,7 +233,7 @@ make push
    [spark-on-openshift-ai.md](spark-on-openshift-ai.md#check-before-you-start).
 
 > [!IMPORTANT]
-> Do **not** grant the project any SCC. The point of the image is that it does not need one.
+> Do **not** grant the project any SCC. The image does not need one.
 
 ## 9. Test on the cluster
 
@@ -267,7 +267,7 @@ Each run also lists every Spark pod with the SCC that admitted it and the UID it
 only passes if all of them say `restricted-v2` and a UID from the namespace's range.
 
 A test failed? Go to [openshift-ai.md: troubleshooting](openshift-ai.md#troubleshooting).
-Results from a real cluster: [openshift-ai.md](openshift-ai.md) and [evidence/](evidence/).
+Results from the test cluster: [openshift-ai.md](openshift-ai.md). Logs: [results/](results/).
 
 ## 10. Use it from a workbench
 

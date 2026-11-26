@@ -1,13 +1,12 @@
-# Evidence
+# Test logs and scan reports
 
 > [!NOTE]
-> **In short:** the raw output behind every number in the guide, captured 2026-11-26. Colour
-> codes are stripped and nothing else is edited. No file contains a credential value (checked
-> against every Secret on the test cluster).
+> **In short:** output of the test runs and scans, captured 2026-11-26, with colour codes
+> stripped. No file contains a credential value.
 
 | Folder | Holds |
 |---|---|
-| [`openshift/`](openshift/) | Spark 4.2.1 on the real cluster: both bases, plus the Docker Hub image |
+| [`openshift/`](openshift/) | Spark 4.2.1 on the cluster: both bases, plus the Docker Hub image |
 | [`compat/`](compat/) | Spark 4.0.5, 4.1.4 and 4.3.0 on the same cluster and on the build machine |
 | [`scans/`](scans/) | Per-CVE lists for every scanned image |
 | [`image-checks/`](image-checks/) | Output of the 16 hardening checks |
@@ -24,12 +23,12 @@
 | `4.2.1-<base>-security.log` | NetworkPolicy, RBAC and credential checks: 10 / 10 |
 | `4.2.1-<base>-native.log` | `spark-submit` without the operator: 8 / 8 |
 | `4.2.1-<base>-clients.log` | Seven `pyspark-client` versions against the server: 7 / 7 |
-| `4.2.1-<base>-workbench.log` | The notebook executed inside a real workbench pod, with cell outputs |
+| `4.2.1-<base>-workbench.log` | The notebook executed inside a workbench pod, with cell outputs |
 | `dockerhub-4.2.1-operator.log` | The unmodified Docker Hub image through the operator: 5 / 9 |
 | `preflight-spark-hi-4.2.1.log` | `hack/preflight.sh` on the hardened image: 0 failed |
 | `preflight-dockerhub-4.2.1.log` | `hack/preflight.sh` on the Docker Hub image: 1 failed |
 | `00-cluster-2026-11-25.txt` | Versions, nodes, namespace UID range, security context of every Spark pod, operator webhook scope. Captured during the first round of testing, with Spark 4.3.0 images |
-| `first-run-4.3.0-operator-1-failure.log` | The first ever operator run: 8 passed, 1 failed (pod settings ignored outside `default`; see [openshift-ai.md](../openshift-ai.md#1-pod-settings-must-go-in-pod-templates)) |
+| `first-run-4.3.0-operator-1-failure.log` | The first operator run: 8 passed, 1 failed (pod settings ignored outside `default`; see [openshift-ai.md](../openshift-ai.md#1-pod-settings-must-go-in-pod-templates)) |
 
 ## `compat/` — other Spark versions, hardened image
 
