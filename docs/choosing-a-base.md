@@ -12,16 +12,10 @@
 
 ## Decide in three questions
 
-```mermaid
-flowchart TD
-  Q1{"Does your scanner report<br/>OS packages for spark-hi?"}
-  Q1 -- "No, or it reports zero" --> UBI["Use spark-ubi9"]
-  Q1 -- Yes --> Q2{"Does policy require a RHEL 9<br/>benchmark or a fixed OS version?"}
-  Q2 -- Yes --> UBI
-  Q2 -- No --> Q3{"Do you need a shell with<br/>curl or a package manager?"}
-  Q3 -- Yes --> UBI
-  Q3 -- No --> HI["Use spark-hi"]
-```
+1. Does your scanner report OS packages for `spark-hi`? **No, or it reports zero:** use `spark-ubi9`.
+2. Does policy require a RHEL 9 benchmark or a fixed OS version? **Yes:** use `spark-ubi9`.
+3. Do you need a shell with `curl` or a package manager? **Yes:** use `spark-ubi9`.
+4. Otherwise use `spark-hi`.
 
 > [!WARNING]
 > A scanner that does not recognise the distribution reports **zero OS findings**. That looks
