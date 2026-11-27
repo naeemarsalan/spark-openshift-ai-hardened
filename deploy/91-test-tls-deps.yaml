@@ -1,0 +1,117 @@
+# TEST ONLY, used by tests/custom-ca-cluster.sh and tests/proxy-cluster.sh:
+#   * the throw-away S3 endpoint and PostgreSQL again, this time over TLS with certificates
+#     from the OpenShift service CA (a CA no image trusts by default)
+#   * a forward proxy (tests/lib/connect-proxy.py, from the spark-test-proxy ConfigMap)
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-s3-tls
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: test-s3-tls-cert
+spec:
+  selector: { app: test-s3-tls }
+  ports: [{ port: 8443 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-s3-tls
+spec:
+  selector: { matchLabels: { app: test-s3-tls } }
+  template:
+    metadata: { labels: { app: test-s3-tls } }
+    spec:
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: seaweedfs
+          image: docker.io/chrislusf/seaweedfs:latest
+          args: ["server", "-dir=/data", "-s3", "-s3.port=8333", "-s3.port.https=8443",
+                 "-s3.cert.file=/tls/tls.crt", "-s3.key.file=/tls/tls.key", "-s3.config=/etc/seaweedfs/s3.json"]
+          ports: [{ containerPort: 8443 }]
+          securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: ["ALL"] } }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+            - { name: cfg, mountPath: /etc/seaweedfs, readOnly: true }
+            - { name: tls, mountPath: /tls, readOnly: true }
+      volumes:
+        - { name: data, emptyDir: {} }
+        - { name: cfg, secret: { secretName: spark-test-deps, items: [{ key: s3.json, path: s3.json }] } }
+        - { name: tls, secret: { secretName: test-s3-tls-cert } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-postgres-tls
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: test-postgres-tls-cert
+spec:
+  selector: { app: test-postgres-tls }
+  ports: [{ port: 5432 }]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: test-postgres-tls-cfg }
+data:
+  ssl.conf: |
+    ssl = on
+    ssl_cert_file = '/tls/tls.crt'
+    ssl_key_file = '/tls/tls.key'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-postgres-tls
+spec:
+  selector: { matchLabels: { app: test-postgres-tls } }
+  template:
+    metadata: { labels: { app: test-postgres-tls } }
+    spec:
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: postgres
+          image: quay.io/sclorg/postgresql-16-c9s:latest
+          env:
+            - { name: POSTGRESQL_USER, value: spark }
+            - { name: POSTGRESQL_DATABASE, value: sparkdb }
+            - { name: POSTGRESQL_PASSWORD, valueFrom: { secretKeyRef: { name: spark-test-deps, key: pg-password } } }
+          ports: [{ containerPort: 5432 }]
+          readinessProbe: { exec: { command: ["pg_isready", "-h", "127.0.0.1"] }, periodSeconds: 5 }
+          securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: ["ALL"] } }
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/pgsql/data }
+            - { name: cfg, mountPath: /opt/app-root/src/postgresql-cfg, readOnly: true }
+            - { name: tls, mountPath: /tls, readOnly: true }
+      volumes:
+        - { name: data, emptyDir: {} }
+        - { name: cfg, configMap: { name: test-postgres-tls-cfg } }
+        # PostgreSQL refuses a private key that others can read: 0440, group = the pod's fsGroup.
+        - { name: tls, secret: { secretName: test-postgres-tls-cert, defaultMode: 288 } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: test-proxy }
+spec:
+  selector: { app: test-proxy }
+  ports:
+    - { name: s3a, port: 3128 }
+    - { name: jvm, port: 3129 }
+    - { name: python, port: 3130 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-proxy
+spec:
+  selector: { matchLabels: { app: test-proxy } }
+  template:
+    metadata: { labels: { app: test-proxy } }
+    spec:
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: proxy
+          image: SPARK_IMAGE_PLACEHOLDER
+          command: ["python3.12", "-u", "/proxy/connect-proxy.py", "3128", "3129", "3130"]
+          securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: ["ALL"] }, readOnlyRootFilesystem: true }
+          volumeMounts: [{ name: proxy, mountPath: /proxy, readOnly: true }]
+      volumes:
+        - { name: proxy, configMap: { name: spark-test-proxy } }

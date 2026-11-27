@@ -1,0 +1,8 @@
+== cluster: https://api.spark.sandbox660.opentlc.com:6443  namespace: spark-demo  image: oci.arsalan.io/spark/spark-hi:4.2.1-2
+  PASS job completed with 2 executors behind the proxy settings
+  PASS S3 connector went through the proxy: 3 tunnel(s) to test-s3-tls.spark-demo.svc:8443; S3A_VIA_PROXY_OK
+  PASS JVM code went through the proxy: 1 tunnel(s) to repo1.maven.org:443; JVM_VIA_PROXY_OK https://repo1.maven.org/maven2/ -> HTTP 200
+  PASS Python code went through the proxy: 1 tunnel(s) to repo1.maven.org:443; PYTHON_VIA_PROXY_OK https://repo1.maven.org/maven2/ -> HTTP 200
+  PASS with NO_PROXY set, no Kubernetes API call reached the proxy
+  PASS without NO_PROXY the Kubernetes API calls go to the proxy (job state COMPLETED): 3 CONNECT 3130 kubernetes.default.svc:443;
+== 6 passed, 0 failed

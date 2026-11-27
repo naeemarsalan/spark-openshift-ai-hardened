@@ -1,7 +1,12 @@
 == cluster: https://api.spark.sandbox660.opentlc.com:6443  namespace: spark-demo  image: oci.arsalan.io/spark/spark-hi:4.2.1-2
   PASS S3 endpoint https://test-s3-tls.spark-demo.svc:8443, certificate issuer=CN=openshift-service-serving-signer@1795633241
+  PASS PostgreSQL test-postgres-tls.spark-demo.svc:5432 with TLS, certificate issuer=CN=openshift-service-serving-signer@1795633241
   PASS without the CA the job fails: PKIX path building failed
-  PASS with the CA the job completes: S3A_OK s3a://spark-smoke/smoke/1f44c4ba
+  PASS SparkApplication with the CA, S3 over TLS: S3A_OK s3a://spark-smoke/smoke/127f9b0c
+  PASS SparkApplication with the CA, PostgreSQL with sslmode=verify-full: JDBC_OK smoke_127f9b0c
    s3-custom-ca-driver restricted-v2 uid 1000770000
   PASS trust init container ran; pod admitted by restricted-v2
-== 4 passed, 0 failed
+  PASS SparkConnect server ready with the trust init container: spark-connect-server init=trust scc=restricted-v2
+  PASS Spark Connect client through that server: S3 (https://test-s3-tls.spark-demo.svc:8443) and PostgreSQL over TLS
+  PASS Spark Connect executors have the trust init container: spark-connect-exec-1:trust spark-connect-exec-2:trust 
+== 9 passed, 0 failed

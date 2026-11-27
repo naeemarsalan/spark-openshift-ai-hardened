@@ -1,0 +1,110 @@
+# The Spark Connect server of 20-sparkconnect.yaml, with extra certificate authorities
+# trusted by the server and its executors. Same `trust` blocks as
+# 12-sparkapplication-custom-ca.yaml; see docs/enterprise.md.
+#
+# 20-sparkconnect.yaml holds the Service and NetworkPolicies; apply it once. The operator
+# does not restart a running server when this resource changes, so replace the server:
+#   oc delete sparkconnect spark-connect && oc apply -f 21-sparkconnect-custom-ca.yaml
+apiVersion: sparkoperator.k8s.io/v1alpha1
+kind: SparkConnect
+metadata:
+  name: spark-connect
+spec:
+  sparkVersion: 4.2.1
+  sparkConf:
+    # Required with Spark 4.2 and 4.3: the operator sets spark.driver.bindAddress=0.0.0.0 and Spark
+    # executors would otherwise dial that as the driver address (0.0.0.0:7078, connection
+    # refused, server restart loop). false = use spark.driver.host, which the operator sets
+    # to the pod IP.
+    spark.kubernetes.executor.useDriverPodIP: "false"
+  hadoopConf:
+    fs.s3a.path.style.access: "true"
+    fs.s3a.endpoint.region: us-east-1
+  server:
+    template:
+      spec:
+        serviceAccountName: spark-operator-spark
+        volumes:
+          - name: ca
+            projected:
+              sources:
+                - configMap: { name: odh-trusted-ca-bundle, optional: true }
+                - configMap: { name: openshift-service-ca.crt, optional: true }
+                - configMap: { name: my-ca, optional: true }
+          - name: trust
+            emptyDir: {}
+        initContainers:
+          - name: trust
+            image: SPARK_IMAGE_PLACEHOLDER
+            command: ["update-ca-trust", "extract", "-o", "/trust"]
+            volumeMounts:
+              - { name: ca, mountPath: /etc/pki/ca-trust/source/anchors, readOnly: true }
+              - { name: trust, mountPath: /trust }
+            securityContext:
+              capabilities: { drop: ["ALL"] }
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              seccompProfile: { type: RuntimeDefault }
+        containers:
+          - name: spark-kubernetes-driver
+            image: SPARK_IMAGE_PLACEHOLDER
+            imagePullPolicy: IfNotPresent
+            # S3A picks the endpoint up from the AWS SDK's own variable; credentials likewise.
+            env:
+              - { name: AWS_ENDPOINT_URL_S3, value: "S3_TLS_ENDPOINT_PLACEHOLDER" }
+              - { name: AWS_ACCESS_KEY_ID, valueFrom: { secretKeyRef: { name: spark-datasources, key: AWS_ACCESS_KEY_ID, optional: true } } }
+              - { name: AWS_SECRET_ACCESS_KEY, valueFrom: { secretKeyRef: { name: spark-datasources, key: AWS_SECRET_ACCESS_KEY, optional: true } } }
+            resources:
+              requests: { cpu: 500m, memory: 1500Mi }
+              limits: { memory: 2Gi }
+            volumeMounts:
+              - { name: trust, mountPath: /etc/pki/ca-trust/extracted, readOnly: true }
+            securityContext:
+              capabilities: { drop: ["ALL"] }
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              seccompProfile: { type: RuntimeDefault }
+  executor:
+    instances: 2
+    cores: 1
+    memory: 1g
+    template:
+      spec:
+        volumes:
+          - name: ca
+            projected:
+              sources:
+                - configMap: { name: odh-trusted-ca-bundle, optional: true }
+                - configMap: { name: openshift-service-ca.crt, optional: true }
+                - configMap: { name: my-ca, optional: true }
+          - name: trust
+            emptyDir: {}
+        initContainers:
+          - name: trust
+            image: SPARK_IMAGE_PLACEHOLDER
+            command: ["update-ca-trust", "extract", "-o", "/trust"]
+            volumeMounts:
+              - { name: ca, mountPath: /etc/pki/ca-trust/source/anchors, readOnly: true }
+              - { name: trust, mountPath: /trust }
+            securityContext:
+              capabilities: { drop: ["ALL"] }
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              seccompProfile: { type: RuntimeDefault }
+        containers:
+          - name: spark-kubernetes-executor
+            image: SPARK_IMAGE_PLACEHOLDER
+            imagePullPolicy: IfNotPresent
+            env:
+              - { name: AWS_ENDPOINT_URL_S3, value: "S3_TLS_ENDPOINT_PLACEHOLDER" }
+              - { name: AWS_ACCESS_KEY_ID, valueFrom: { secretKeyRef: { name: spark-datasources, key: AWS_ACCESS_KEY_ID, optional: true } } }
+              - { name: AWS_SECRET_ACCESS_KEY, valueFrom: { secretKeyRef: { name: spark-datasources, key: AWS_SECRET_ACCESS_KEY, optional: true } } }
+            volumeMounts:
+              - { name: trust, mountPath: /etc/pki/ca-trust/extracted, readOnly: true }
+            securityContext:
+              capabilities: { drop: ["ALL"] }
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              seccompProfile: { type: RuntimeDefault }

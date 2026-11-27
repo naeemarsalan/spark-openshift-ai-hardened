@@ -12,6 +12,7 @@
 > - **Your own CA in Spark pods:** an init container adds it at start-up, with no image
 >   rebuild. Or bake it in with a three-line Containerfile.
 > - **Workbenches** already receive the cluster's CA bundle from OpenShift AI.
+> - Each section ends with the test that covers it. [All tests](#tests-behind-this-page).
 
 **On this page**
 
@@ -23,6 +24,7 @@
 - [Trust your own CA in Spark pods](#trust-your-own-ca-in-spark-pods)
 - [Proxy settings for Spark pods](#proxy-settings-for-spark-pods)
 - [Workbenches](#workbenches)
+- [Tests behind this page](#tests-behind-this-page)
 - [Not tested](#not-tested)
 
 ## What goes where
@@ -38,6 +40,7 @@
 | A private registry for the finished image | `REGISTRY`, a pull secret | `versions.env`, the project |
 | A registry with a private CA | `additionalTrustedCA` | Cluster (administrator) |
 | S3 or a database with a private CA | The `trust` init container | Your Spark manifests |
+| A proxy between Spark and S3 or the internet | `fs.s3a.proxy.*`, `-Dhttps.proxyHost`, `HTTPS_PROXY` + `NO_PROXY` | Your Spark manifests |
 
 ## Download from your own Artifactory or Nexus
 
@@ -117,7 +120,6 @@ CA and a password ([log](results/local/mirror-local.log)):
   PASS Spark GPG signature verified
   PASS every file matches artifacts.sha256
   PASS password not in the log or the artifacts
-== 6 passed, 0 failed
 ```
 
 ## Base images and RPMs from your own mirror
@@ -178,7 +180,25 @@ The hardened flavour takes one repository instead of two. Keep `gpgcheck=1`: the
 the base images, so packages from a mirror are still verified.
 
 If the mirror has a private CA, add `sslcacert=/etc/pki/corp-ca.pem` to each section and
-mount that file with a second `-v` in `BUILD_ARGS`.
+mount that file with a second `-v`:
+
+```bash
+BUILD_ARGS="-v $PWD/internal.repo:/etc/yum.repos.d/internal.repo:ro,z -v $PWD/corp-ca.pem:/etc/pki/corp-ca.pem:ro,z"
+```
+
+**Verification**
+
+The same test builds an image from an HTTPS RPM mirror with a private CA, configured only
+through a mounted `.repo` file:
+
+```
+== RPM mirror: https://host.containers.internal:<port> (private CA)
+  PASS without sslcacert, the build stops: Curl error (60): SSL peer certificate or SSH remote key was not OK for https
+  PASS with the mounted .repo file and CA: 1 RPM(s) installed from the mirror, signature checked
+```
+
+Both full images were also built this way, with `make build` and a `.repo` file under new
+repository IDs.
 
 > [!TIP]
 > On a RHEL host registered to Satellite, `podman` passes the host's subscription into the
@@ -204,8 +224,19 @@ export no_proxy=.example.com,localhost,127.0.0.1
 
 Put your mirror and registry host names in `no_proxy` so they are reached directly.
 
-The variables are not saved in the image. A build with `https_proxy` set produces an image
-whose environment has no proxy entry.
+The variables are not saved in the image.
+
+**Verification**
+
+The same test repeats the fetch and a build through a forward proxy:
+
+```
+== proxy: http://127.0.0.1:<port>
+  PASS fetch with https_proxy set: curl and pip went through the proxy (132 tunnels), lock still matches
+  PASS fetch with no_proxy=localhost: the mirror is reached directly (0 new tunnels)
+  PASS image build with https_proxy set: microdnf went through the proxy (5 tunnels to cdn-ubi.redhat.com)
+  PASS the built image has no proxy setting in its environment
+```
 
 ## Pull the image from a private registry
 
@@ -235,14 +266,27 @@ whose environment has no proxy entry.
       -p '{"spec":{"additionalTrustedCA":{"name":"registry-cas"}}}'
    ```
 
+   The CA reaches the nodes in under a minute, with no node reboot.
+
 **Verification**
 
 ```bash
 hack/preflight.sh <registry>/spark-hi:<tag>
 ```
 
-It reports `PASS cluster can pull the image`. Without the CA, pods stay in `ImagePullBackOff`
-and the event says `x509: certificate signed by unknown authority`.
+It reports `PASS cluster can pull the image`.
+
+`tests/registry-ca-cluster.sh <image>` runs the whole sequence against a throwaway registry
+with a private CA, then restores the cluster setting
+([log](results/openshift/4.2.1-hi-registry-ca.log)):
+
+```
+  PASS registry https://test-registry-spark-demo.apps.<cluster> with a private CA; image copied to .../test/spark-hi:4.2.1-2
+  PASS before: the pull fails: x509: certificate signed by unknown authority
+  PASS CA added: ConfigMap spark-test-registry-ca in openshift-config, named in image.config.openshift.io/cluster
+  PASS after: the pull works (27s after the change, no node reboot); pod ran as UID 1000770000, version 4.2.1
+  PASS admitted by restricted-v2
+```
 
 ## Trust your own CA in Spark pods
 
@@ -319,6 +363,21 @@ Full manifest:
 It runs under `restricted-v2` as the assigned UID, on both image flavours. When the ConfigMap
 changes, new pods pick the change up. Running pods do not.
 
+**Spark Connect**
+
+The same blocks go in `server.template` and `executor.template` of the `SparkConnect`
+resource:
+[`21-sparkconnect-custom-ca.yaml`](../deploy/openshift-ai/21-sparkconnect-custom-ca.yaml).
+
+> [!IMPORTANT]
+> The operator does not restart a running Spark Connect server when you change the resource.
+> Replace it:
+>
+> ```bash
+> oc delete sparkconnect spark-connect
+> oc apply -f deploy/openshift-ai/21-sparkconnect-custom-ca.yaml
+> ```
+
 ### Option B: bake it into a derived image
 
 ```dockerfile
@@ -341,28 +400,39 @@ need no change.
 | Follows CAs the cluster administrator adds | yes | no |
 | Extra start-up time | about a second per pod | none |
 
+### Databases over TLS
+
+| Driver | How it finds the CA |
+|---|---|
+| PostgreSQL | Its own setting, not the JVM trust store. Add `sslmode=verify-full&sslrootcert=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem` to the URL |
+| SQL Server | The JVM trust store. `encrypt=true;trustServerCertificate=false` in the URL |
+
+The PEM path in the PostgreSQL URL is the trust store the init container wrote, so it holds
+your CA with both options.
+
 ### Verification
 
-`tests/custom-ca-cluster.sh <image>` starts an S3 endpoint with a certificate from the
-OpenShift service CA, runs the job without the CA, then with option A.
+`tests/custom-ca-cluster.sh <image>` serves S3 and PostgreSQL over TLS with certificates from
+the OpenShift service CA, which no image trusts by default. It runs a job without the CA,
+then with option A, then through a Spark Connect server.
 
 ```
   PASS S3 endpoint https://test-s3-tls.spark-demo.svc:8443, certificate issuer=CN=openshift-service-serving-signer@...
+  PASS PostgreSQL test-postgres-tls.spark-demo.svc:5432 with TLS, certificate issuer=CN=openshift-service-serving-signer@...
   PASS without the CA the job fails: PKIX path building failed
-  PASS with the CA the job completes: S3A_OK s3a://spark-smoke/smoke/...
+  PASS SparkApplication with the CA, S3 over TLS: S3A_OK s3a://spark-smoke/smoke/...
+  PASS SparkApplication with the CA, PostgreSQL with sslmode=verify-full: JDBC_OK smoke_...
   PASS trust init container ran; pod admitted by restricted-v2
-== 4 passed, 0 failed
+  PASS SparkConnect server ready with the trust init container: spark-connect-server init=trust scc=restricted-v2
+  PASS Spark Connect client through that server: S3 (https://test-s3-tls.spark-demo.svc:8443) and PostgreSQL over TLS
+  PASS Spark Connect executors have the trust init container: spark-connect-exec-1:trust spark-connect-exec-2:trust
+== 9 passed, 0 failed
 ```
 
 Logs: [hardened image](results/openshift/4.2.1-hi-custom-ca.log),
 [UBI 9](results/openshift/4.2.1-ubi9-custom-ca.log).
 
-### Databases over TLS
-
-| Driver | How it finds the CA |
-|---|---|
-| SQL Server | The JVM trust store. `encrypt=true;trustServerCertificate=false` in the URL is enough |
-| PostgreSQL | Its own setting, not the JVM trust store. Add `sslmode=verify-full&sslrootcert=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem` to the URL |
+Option B was checked on the build machine: the CA is in the image's Java and PEM trust stores.
 
 ## Proxy settings for Spark pods
 
@@ -370,23 +440,69 @@ OpenShift's cluster-wide proxy (`oc get proxy cluster -o yaml`) is used by the n
 platform. It is **not** added to your pods. Most Spark jobs need no proxy, because S3 and the
 databases are inside the network.
 
-If a job must reach something through a proxy, set it per layer:
+If a job must reach something through a proxy, each layer has its own setting. One does not
+cover the others.
 
-| Layer | Setting |
-|---|---|
-| S3 connector | `spark.hadoop.fs.s3a.proxy.host` and `spark.hadoop.fs.s3a.proxy.port` |
-| Other JVM code | `-Dhttps.proxyHost=<host> -Dhttps.proxyPort=<port> -Dhttp.nonProxyHosts=*.svc\|*.cluster.local\|localhost` in `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions` |
-| Python code in UDFs | `HTTPS_PROXY` and `NO_PROXY` as container environment variables |
+| Layer | Setting | Where |
+|---|---|---|
+| S3 connector | `spark.hadoop.fs.s3a.proxy.host`, `spark.hadoop.fs.s3a.proxy.port` | `sparkConf` |
+| Other JVM code | `-Dhttps.proxyHost=<host> -Dhttps.proxyPort=<port> -Dhttp.nonProxyHosts=...` | `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions` |
+| Python code in the driver and in UDFs | `HTTPS_PROXY` and `NO_PROXY` | Container `env` in both pod templates |
+
+```yaml
+spec:
+  sparkConf:
+    spark.hadoop.fs.s3a.proxy.host: proxy.example.com
+    spark.hadoop.fs.s3a.proxy.port: "3128"
+    spark.driver.extraJavaOptions: "-Dhttps.proxyHost=proxy.example.com -Dhttps.proxyPort=3128 -Dhttp.nonProxyHosts=kubernetes.default.svc|*.cluster.local|localhost|172.30.*"
+    spark.executor.extraJavaOptions: "-Dhttps.proxyHost=proxy.example.com -Dhttps.proxyPort=3128 -Dhttp.nonProxyHosts=kubernetes.default.svc|*.cluster.local|localhost|172.30.*"
+  driver:
+    template:
+      spec:
+        containers:
+          - name: spark-kubernetes-driver
+            env:
+              - { name: HTTPS_PROXY, value: "http://proxy.example.com:3128" }
+              - { name: NO_PROXY, value: "kubernetes.default.svc,.cluster.local,localhost,127.0.0.1,172.30.0.1" }
+```
+
+Full manifest:
+[`13-sparkapplication-proxy.yaml`](../deploy/openshift-ai/13-sparkapplication-proxy.yaml).
+
+- `http.nonProxyHosts` uses `|` between entries and `*` as the wildcard. `NO_PROXY` uses
+  commas and a leading dot.
+- Add your internal S3 and database host names to both lists if they must not go through the
+  proxy. Add `*.svc` and `.svc` if nothing in the cluster should.
+- `172.30.0.1` is the Kubernetes API service address on a default OpenShift install. Start
+  from the cluster's own list: `oc get proxy cluster -o jsonpath='{.status.noProxy}'`.
 
 > [!WARNING]
-> If you set `HTTPS_PROXY` on the driver container, also set `NO_PROXY`. The driver's
-> Kubernetes client reads both, and without `NO_PROXY` it sends its API calls to the proxy and
-> cannot create executors. Start from the cluster's own list and add `.svc` and
-> `.cluster.local`:
->
-> ```bash
-> oc get proxy cluster -o jsonpath='{.status.noProxy}'
-> ```
+> If you set `HTTPS_PROXY` on the driver container, set `NO_PROXY` too. The driver's
+> Kubernetes client reads both. Without `NO_PROXY` it sends its API calls to the proxy, and a
+> proxy that cannot reach the cluster's internal addresses leaves the driver unable to create
+> executors.
+
+**Verification**
+
+`tests/proxy-cluster.sh <image>` runs that manifest against a small forward proxy in the
+project. The proxy listens on one port per layer, so its log shows which setting sent which
+request.
+
+```
+  PASS job completed with 2 executors behind the proxy settings
+  PASS S3 connector went through the proxy: 3 tunnel(s) to test-s3-tls.spark-demo.svc:8443; S3A_VIA_PROXY_OK
+  PASS JVM code went through the proxy: 1 tunnel(s) to repo1.maven.org:443; JVM_VIA_PROXY_OK https://repo1.maven.org/maven2/ -> HTTP 200
+  PASS Python code went through the proxy: 1 tunnel(s) to repo1.maven.org:443; PYTHON_VIA_PROXY_OK https://repo1.maven.org/maven2/ -> HTTP 200
+  PASS with NO_PROXY set, no Kubernetes API call reached the proxy
+  PASS without NO_PROXY the Kubernetes API calls go to the proxy (job state COMPLETED): 3 CONNECT 3130 kubernetes.default.svc:443;
+== 6 passed, 0 failed
+```
+
+The last line is the warning above, observed. The job still completed there only because the
+test proxy sits inside the cluster and can reach the API.
+
+Logs: [hardened image](results/openshift/4.2.1-hi-proxy.log),
+[UBI 9](results/openshift/4.2.1-ubi9-proxy.log).
 
 ## Workbenches
 
@@ -407,16 +523,26 @@ variable on the workbench, or pass it per install:
 A CA your administrator added (see [above](#where-the-ca-comes-from)) is in the workbench
 bundle, so `pip` trusts the mirror with no further setting.
 
+## Tests behind this page
+
+| Test | Where it runs | Covers | Result |
+|---|---|---|---|
+| `tests/mirror-local.sh` | Build machine | Fetch from a private mirror (CA, password); fetch and build through a proxy; `no_proxy`; RPM mirror with a private CA | [12 / 12](results/local/mirror-local.log) |
+| `tests/custom-ca-cluster.sh` | Cluster | S3 and PostgreSQL over TLS with a private CA, in a `SparkApplication` and through `SparkConnect` | 9 / 9 on [hardened](results/openshift/4.2.1-hi-custom-ca.log) and [UBI 9](results/openshift/4.2.1-ubi9-custom-ca.log) |
+| `tests/proxy-cluster.sh` | Cluster | The three proxy settings and `NO_PROXY` | 6 / 6 on [hardened](results/openshift/4.2.1-hi-proxy.log) and [UBI 9](results/openshift/4.2.1-ubi9-proxy.log) |
+| `tests/registry-ca-cluster.sh` | Cluster, as administrator | Image pull from a registry with a private CA, before and after `additionalTrustedCA` | [5 / 5](results/openshift/4.2.1-hi-registry-ca.log) |
+
+The mirror, the proxy and the registry in these tests are small stand-ins that the tests
+start themselves. `registry-ca-cluster.sh` changes a cluster-wide setting and puts it back.
+
 ## Not tested
 
-- A proxy, on the build machine beyond passing the variables into the build, and on the
-  cluster. The test cluster has none.
-- An RPM mirror with its own CA. The mounted `.repo` file was tested with new repository IDs
-  pointing at Red Hat's public URLs.
-- A registry with a private CA on the cluster.
-- Option A in a `SparkConnect` resource. The same blocks go in `server.template` and
-  `executor.template`.
-- JDBC over TLS.
+- Artifactory, Nexus and Satellite themselves. The settings were tested against stand-ins
+  that behave the same way on the wire.
+- A proxy that asks for a user name and password.
+- SQL Server over TLS.
+- Option B on the cluster.
+- `PIP_INDEX_URL` on a workbench.
 
 ---
 

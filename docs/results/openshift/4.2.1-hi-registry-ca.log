@@ -1,0 +1,7 @@
+== cluster: https://api.spark.sandbox660.opentlc.com:6443  namespace: spark-demo
+  PASS registry https://test-registry-spark-demo.apps.spark.sandbox660.opentlc.com with a private CA; image copied to test-registry-spark-demo.apps.spark.sandbox660.opentlc.com/test/spark-hi:4.2.1-2
+  PASS before: the pull fails: x509: certificate signed by unknown authority
+  PASS CA added: ConfigMap spark-test-registry-ca in openshift-config, named in image.config.openshift.io/cluster
+  PASS after: the pull works (27s after the change, no node reboot); pod ran as UID 1000770000, version 4.2.1
+  PASS admitted by restricted-v2
+== 5 passed, 0 failed

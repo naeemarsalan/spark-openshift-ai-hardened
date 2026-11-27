@@ -61,6 +61,8 @@ spec:
               - secretRef: { name: spark-datasources }
             env:
               - { name: S3_ENDPOINT, value: "S3_TLS_ENDPOINT_PLACEHOLDER" }
+              # PostgreSQL's driver does not use the JVM trust store: name the PEM bundle in the URL.
+              - { name: JDBC_URL, value: "JDBC_TLS_URL_PLACEHOLDER" }
             volumeMounts:
               - { name: jobs, mountPath: /jobs }
               - { name: trust, mountPath: /etc/pki/ca-trust/extracted, readOnly: true }
@@ -103,6 +105,8 @@ spec:
               - secretRef: { name: spark-datasources }
             env:
               - { name: S3_ENDPOINT, value: "S3_TLS_ENDPOINT_PLACEHOLDER" }
+              # PostgreSQL's driver does not use the JVM trust store: name the PEM bundle in the URL.
+              - { name: JDBC_URL, value: "JDBC_TLS_URL_PLACEHOLDER" }
             volumeMounts:
               - { name: trust, mountPath: /etc/pki/ca-trust/extracted, readOnly: true }
             securityContext:

@@ -1,8 +1,16 @@
-== mirror: https://localhost:29152 (private CA, basic auth)
+== mirror: https://localhost:21157 (private CA, basic auth)
   PASS without the CA, curl refuses the certificate
   PASS without credentials, the mirror answers 401
   PASS fetch from the mirror: 57 curl downloads, 12 wheels
   PASS Spark GPG signature verified
   PASS every file matches artifacts.sha256
   PASS password not in the log or the artifacts
-== 6 passed, 0 failed
+== proxy: http://127.0.0.1:21158
+  PASS fetch with https_proxy set: curl and pip went through the proxy (132 tunnels), lock still matches
+  PASS fetch with no_proxy=localhost: the mirror is reached directly (0 new tunnels)
+  PASS image build with https_proxy set: microdnf went through the proxy (5 tunnels to cdn-ubi.redhat.com)
+  PASS the built image has no proxy setting in its environment
+== RPM mirror: https://host.containers.internal:21159 (private CA)
+  PASS without sslcacert, the build stops: Curl error (60): SSL peer certificate or SSH remote key was not OK for https
+  PASS with the mounted .repo file and CA: 1 RPM(s) installed from the mirror, signature checked
+== 12 passed, 0 failed

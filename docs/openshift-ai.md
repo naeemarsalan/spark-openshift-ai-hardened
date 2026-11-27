@@ -37,6 +37,8 @@ Find your symptom, apply the fix.
 | `getOrCreate()` **hangs** in a notebook | A NetworkPolicy is dropping the connection | Label the namespace `opendatahub.io/dashboard=true`. [Workbench](#workbench) |
 | Job fails with `PKIX path building failed` | S3 or the database presents a certificate from a CA the image does not trust | Add the trust init container. [enterprise.md](enterprise.md#trust-your-own-ca-in-spark-pods) |
 | Pods stay in `ImagePullBackOff` with `x509: certificate signed by unknown authority` | The registry uses a private CA | [enterprise.md](enterprise.md#pull-the-image-from-a-private-registry) |
+| A change to the `SparkConnect` resource has no effect | The operator does not restart a running server | `oc delete sparkconnect <name>`, then apply it again |
+| Driver cannot create executors after you set `HTTPS_PROXY` | The driver's Kubernetes client is using the proxy | Set `NO_PROXY`. [enterprise.md](enterprise.md#proxy-settings-for-spark-pods) |
 | Database password shows up in the Connect server log | A custom `SPARK_CONF_DIR` dropped the logger settings | Keep the four Connect loggers at WARN. [hardening.md](hardening.md#10-spark-connect-does-not-log-client-requests) |
 
 ## Tested configuration
@@ -63,7 +65,9 @@ Other Spark versions on the same cluster: [compatibility.md](compatibility.md).
 | `tests/cluster-test.sh` | [8 / 8](results/openshift/4.2.1-hi-native.log) | [8 / 8](results/openshift/4.2.1-ubi9-native.log) |
 | `tests/compat-clients.sh` | [7 / 7](results/openshift/4.2.1-hi-clients.log) | [7 / 7](results/openshift/4.2.1-ubi9-clients.log) |
 | `tests/workbench-test.sh` ² | [pass](results/openshift/4.2.1-hi-workbench.log) | [pass](results/openshift/4.2.1-ubi9-workbench.log) |
-| `tests/custom-ca-cluster.sh` | [4 / 4](results/openshift/4.2.1-hi-custom-ca.log) | [4 / 4](results/openshift/4.2.1-ubi9-custom-ca.log) |
+| `tests/custom-ca-cluster.sh` | [9 / 9](results/openshift/4.2.1-hi-custom-ca.log) | [9 / 9](results/openshift/4.2.1-ubi9-custom-ca.log) |
+| `tests/proxy-cluster.sh` | [6 / 6](results/openshift/4.2.1-hi-proxy.log) | [6 / 6](results/openshift/4.2.1-ubi9-proxy.log) |
+| `tests/registry-ca-cluster.sh` | [5 / 5](results/openshift/4.2.1-hi-registry-ca.log) | not run |
 
 **What each test covers**
 
@@ -75,7 +79,9 @@ Other Spark versions on the same cluster: [compatibility.md](compatibility.md).
 | `cluster-test.sh` | The same without the operator: `spark-submit` in cluster mode from a Job, and a Spark Connect Deployment |
 | `compat-clients.sh` | Seven `pyspark-client` versions, each running a pandas UDF, S3 and JDBC through the server |
 | `workbench-test.sh` | `workbench.ipynb` executed top to bottom inside an OpenShift AI workbench pod against the `SparkConnect` server |
-| `custom-ca-cluster.sh` | S3 over TLS with a private CA: the job fails without the CA and completes with the trust init container ([enterprise.md](enterprise.md#trust-your-own-ca-in-spark-pods)) |
+| `custom-ca-cluster.sh` | S3 and PostgreSQL over TLS with a private CA: the job fails without the CA, and completes with the trust init container in a `SparkApplication` and through `SparkConnect` ([enterprise.md](enterprise.md#trust-your-own-ca-in-spark-pods)) |
+| `proxy-cluster.sh` | S3 connector, JVM and Python traffic through a forward proxy ([enterprise.md](enterprise.md#proxy-settings-for-spark-pods)) |
+| `registry-ca-cluster.sh` | Image pull from a registry with a private CA, before and after the cluster trusts it ([enterprise.md](enterprise.md#pull-the-image-from-a-private-registry)) |
 
 ¹ Spark Connect server on `spark-ubi9`. The two batch jobs use the `spark-examples` image,
 which is built on `spark-hi`.
